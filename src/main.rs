@@ -1,66 +1,97 @@
-            use eframe::{egui, App};
-use chrono::Local;
-use std::fs;
-use std::collections::HashMap;
+use std::cell::Cell;
+use std::rc::Rc;
 
-fn main() {
-    // Load settings from settings.ini
-    let settings = load_settings("settings.ini");
+use gio::Settings;
 
-    // Extract settings from the loaded configuration
-    let title = settings.get("title").unwrap_or(&"Hyprclock".to_string()).clone();
-    let width = settings.get("width").unwrap_or(&"400".to_string()).parse::<f32>().unwrap_or(400.0);
-    let height = settings.get("height").unwrap_or(&"300".to_string()).parse::<f32>().unwrap_or(300.0);
+use glib::clone;
+use gtk4 as gtk;
+use gtk::prelude::*;
+use gtk::{gio, glib, Align, Application, ApplicationWindow, Button, Orientation, Switch};
 
-    let options = eframe::NativeOptions {
-        initial_window_size: Some(egui::vec2(width, height)),
-        ..Default::default()
-    };
+const APP_ID: &str = "org.cvusmo.Hyprclock";
 
-    eframe::run_native(
-        &title,
-        options,
-        Box::new(|_cc| -> Result<Box<(dyn App + 'static)>, Box<(dyn std::error::Error + Send + Sync + 'static)>> {
-            Ok(Box::new(Hyprclock))
-        }),
-    ).unwrap();
+fn main() -> glib::ExitCode {
+
+    let app = Application::builder().application_id(APP_ID).build();
+
+    app.connect_activate(build_ui);
+
+    app.run()
 }
 
-struct Hyprclock;
+fn build_ui(app: &Application) {
 
-impl Hyprclock {
-    fn new() -> Self {
-        Self
-    }
-}
+    let settings = Settings::new(APP_ID);
 
-impl eframe::App for Hyprclock {
-    fn update(&mut self, ctx: &egui::Context, _frame: &mut eframe::Frame) {
-        egui::CentralPanel::default().show(ctx, |ui| {
-            let time = Local::now().format("%H:%M:%S").to_string();
-            ui.label(format!("Current time: {}", time));
-        });
-        ctx.request_repaint();
-    }
-}
+    let is_switch_enabled = settings.boolean("is-switch-enabled");
 
-// Function to load settings from an INI file
-fn load_settings(file_path: &str) -> HashMap<String, String> {
-    let mut settings = HashMap::new();
+    let switch = Switch::builder()
+        .margin_top(48)
+        .margin_bottom(48)
+        .margin_start(48)
+        .margin_end(48)
+        .valign(Align::Center)
+        .halign(Align::Center)
+        .state(is_switch_enabled)
+        .build();
     
-    if let Ok(contents) = fs::read_to_string(file_path) {
-        for line in contents.lines() {
-            if let Some((key, value)) = line.split_once('=') {
-                settings.insert(key.trim().to_string(), value.trim().to_string());
-            }
+    switch.connect_state_set(move |_, is_enabled| {
+        settings
+            .set_boolean("is-switch-enabled", is_enabled)
+            .expect("Could not set setting.");
+        
+        glib::Propagation::Proceed
+    });
+
+    let button_increase = Button::builder()
+        .label("Increase")
+        .margin_top(12)
+        .margin_bottom(12)
+        .margin_start(12)
+        .margin_end(12)
+        .build();
+
+    let button_decrease = Button::builder()
+        .label("Decrease")
+        .margin_top(12)
+        .margin_bottom(12)
+        .margin_start(12)
+        .margin_end(12)
+        .build();
+
+    let number = Rc::new(Cell::new(0));
+
+    button_increase.connect_clicked(clone!(
+        #[weak]
+        number,
+        #[weak]
+        button_decrease,
+        move |_| {
+            number.set(number.get() + 1);
+            button_decrease.set_label(&number.get().to_string());
         }
-    }
-    
-    settings
-}
-}
+    ));
+    button_decrease.connect_clicked(clone!(
+        #[weak]
+        button_increase,
+        move |_| {
+            number.set(number.get() - 1);
+            button_increase.set_label(&number.get().to_string());
         }
-    }
+    ));
     
-    settings
+    let gtk_box = gtk::Box::builder()
+        .orientation(Orientation::Vertical)
+        .build();
+    gtk_box.append(&button_increase);
+    gtk_box.append(&button_decrease);
+    gtk_box.append(&switch);
+
+    let window = ApplicationWindow::builder()
+        .application(app)
+        .title("Hyprclock")
+        .child(&gtk_box)
+        .build();
+
+    window.present();
 }
