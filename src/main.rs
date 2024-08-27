@@ -18,12 +18,11 @@ fn main() -> glib::ExitCode {
 
 fn run_main(app: &Application) {
     
-    // initialize config and update
-    let _check = Config::check_config();
+    // Initialize config and update
     let config = Config::new(); 
     let _update = config.update();
 
-    // initialize window and build the ui
-    let window = gui::window::build_ui(app);
+    // Initialize window and build the UI
+    let window = gui::window::build_ui(app, &config);
     window.present();
 }

@@ -1,17 +1,20 @@
 // src/configuration/theme.rs
-// github.com/cvusmo/hyprclock
 
 use serde::{Serialize, Deserialize};
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct ThemeConfig {
-    pub theme_name: String,
+    pub background_color: String,
+    pub text_color: String,
+    pub font_size: u32,
 }
 
 impl ThemeConfig {
     pub fn new() -> Self {
-        ThemeConfig {
-            theme_name: String::from("Materia-dark"), // Default value
+        Self {
+            background_color: "#000000".to_string(), // Default values
+            text_color: "#59F87E".to_string(),
+            font_size: 14,
         }
     }
 }
