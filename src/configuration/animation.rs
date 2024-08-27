@@ -1,5 +1,9 @@
 // src/configuration/animation.rs
+// github.com/cvusmo/hyprclock
 
+use serde::{Serialize, Deserialize};
+
+#[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct AnimationConfig {
     pub blur_enabled: bool,
     pub fade_in_enabled: bool,
