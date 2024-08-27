@@ -87,7 +87,7 @@ pub fn build_ui(app: &Application) -> ApplicationWindow {
         .child(&grid)
         .build();
 
-    std::time::Duration::from_secs(1);
+    let _update = std::time::Duration::from_secs(1);
     glib::timeout_add_seconds_local(1, move || {
         clock_label.set_label(&get_current_time());
         Continue
