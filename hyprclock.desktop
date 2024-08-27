@@ -1,0 +1,8 @@
+[Desktop Entry]
+Name=Hyprclock
+Comment=Display a real-time clock
+Exec=/home/echo/projects/hyprclock/target/release/hyprclock
+Icon=icon
+Terminal=false
+Type=Application
+Categories=Utility;
