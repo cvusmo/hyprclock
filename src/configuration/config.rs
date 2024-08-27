@@ -19,6 +19,7 @@ pub struct Config {
 }
 
 impl Config {
+    // Default configuration
     pub fn new() -> Self {
         Config {
             animation: AnimationConfig::new(),
@@ -35,21 +36,19 @@ impl Config {
         if !config_path.exists() {
             // Return default configuration
             let default_config = Config::new();
-            // Create default configuration
             default_config.update()?;
             return Ok(default_config);
+        }
+
+        // Read & parse configuration
+        let config_contents = fs::read_to_string(config_path)?;
+        let loaded_config: Self = toml::de::from_str(&config_contents)
+            .map_err(|e| io::Error::new(io::ErrorKind::InvalidData, e))?;
+
+        Ok(loaded_config)
     }
 
-    // Read & parse configuration
-    let config_contents = fs::read_to_string(config_path)?;
-    let loaded_config: Self = toml::de::from_str(&config_contents)
-        .map_err(|e| io::Error::new(io::ErrorKind::InvalidData, e))?;
-
-    Ok(loaded_config)
-}
-
-
-    // Save current configuration
+    // Save configuration
     pub fn update(&self) -> io::Result<()> {
         let config_path = get_config_path();
 
@@ -58,7 +57,7 @@ impl Config {
             fs::create_dir_all(parent)?;
         }
 
-        // Write configuration to dir
+        // Write configuration
         let config_contents = toml::ser::to_string(self).map_err(|e| io::Error::new(io::ErrorKind::InvalidData, e))?;
         fs::write(config_path, config_contents)
     }

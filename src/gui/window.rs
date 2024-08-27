@@ -11,13 +11,22 @@ use crate::Config;
 pub fn build_ui(app: &Application, config: &Config) -> ApplicationWindow {
     
     // Load configuration styles
-    let _background_color = config.theme.background_color.as_str();
-    let _text_color = config.theme.text_color.as_str();
-    let _font_size = config.theme.font_size;
+    let background_color = config.theme.background_color.clone();
+    let text_color = config.theme.text_color.clone();
+    let font_size = config.theme.font_size;
     
     let clock_label = Label::builder()
         .label(get_current_time())
         .build();
+
+    // Create CSS to apply styles
+    let css = format!(
+        "label {{
+            color: {};
+            font-size: {}px;
+        }}",
+        text_color, font_size
+    );
 
     // Applies style
     let provider = CssProvider::new();
@@ -63,4 +72,3 @@ fn get_current_time() -> String {
     let now: DateTime<Local> = Local::now();
     now.format("%H:%M:%S").to_string()
 }
-

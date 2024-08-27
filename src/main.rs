@@ -1,5 +1,5 @@
-//src/main.rs
-//github.com/cvusmo/hyprclock
+// src/main.rs
+// github.com/cvusmo/hyprclock
 
 mod configuration;
 mod gui;
@@ -17,10 +17,14 @@ fn main() -> glib::ExitCode {
 }
 
 fn run_main(app: &Application) {
-    
     // Initialize config and update
-    let config = Config::new(); 
-    let _update = config.update();
+    let config = match Config::check_config() {
+        Ok(config) => config,
+        Err(e) => {
+            eprintln!("Failed to load config: {}", e);
+            Config::new()
+        }
+    };
 
     // Initialize window and build the UI
     let window = gui::window::build_ui(app, &config);
