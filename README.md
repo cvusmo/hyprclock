@@ -25,19 +25,19 @@ To install **Hyprclock**, follow these steps:
 
 Example for hyprclock.conf:
 
-    ```
-    # ~/.config/hypr/hyprclock.conf
+```
+# ~/.config/hypr/hyprclock.conf
 
-    [General]
-    clock_format = "24-hour"
+[General]
+clock_format = "24-hour"
 
-    [Theme]
-    theme = "Materia-dark"
+[Theme]
+theme = "Materia-dark"
 
-    [Animation]
-    blur_enabled = true
-    fade_in_enabled = true
-    ```
+[Animation]
+blur_enabled = true
+fade_in_enabled = true
+```
 
 ## Usage
 
@@ -45,16 +45,14 @@ Once installed, you can launch Hyprclock from your application menu or by using 
 
 ## Running Hyprclock
 
-    ```
-    bash
-    hyprclock
-    ```
+```
+hyprclock
+```
 
 ## Auto-start
 
 Add the following line to your hyprland.conf
 
-    ```
-    bash
-    exec-once = hyprclock
-    ```
+```
+exec-once = hyprclock
+```
