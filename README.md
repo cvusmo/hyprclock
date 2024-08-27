@@ -6,10 +6,10 @@
 
 ## Features
 
-- **Real-time Clock**: Displays the current time and updates every second.
-- **Customizable Themes**: Supports different themes that can be applied through a simple configuration file or the application’s settings.
-- **Animations**: Includes support for basic animations like blur and fade-in effects.
-- **Easy Configuration**: Configure appearance and behavior through a user-friendly configuration file.
+- [x] **Real-time Clock**: Displays the current time and updates every second.
+- [ ] **Customizable Themes**: Supports different themes that can be applied through a simple configuration file or the application’s settings.
+- [ ] **Animations**: Includes support for basic animations like blur and fade-in effects.
+- [ ] **Easy Configuration**: Configure appearance and behavior through a user-friendly configuration file.
 
 ## Status
 
