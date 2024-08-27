@@ -5,32 +5,48 @@ use gtk4 as gtk;
 use glib::ControlFlow::Continue;
 use gtk::{prelude::*, Application, ApplicationWindow, 
     Grid, Label, Switch, CssProvider, gdk::Display};
-use std::path::Path;
+use std::{env, path::Path};
 use crate::Config;
 
 pub fn build_ui(app: &Application, config: &Config) -> ApplicationWindow {
     
     // Load configuration styles
-    let background_color = config.theme.background_color.clone();
-    let text_color = config.theme.text_color.clone();
+    let background_color = config.theme.background_color.as_str();
+    let text_color = config.theme.text_color.as_str();
     let font_size = config.theme.font_size;
-    
+   
+    let _css = format!(
+        "
+        .clock {{
+            color: {};
+            font-size: {}px;
+        }}
+        .window {{
+            background-color: {};
+        }}
+        ",
+        text_color,
+        font_size,
+        background_color
+    );   
+
     let clock_label = Label::builder()
         .label(get_current_time())
         .build();
 
-    // Create CSS to apply styles
-    let css = format!(
-        "label {{
-            color: {};
-            font-size: {}px;
-        }}",
-        text_color, font_size
-    );
+    //let config_path = Path::new(".config/hypr/hyprclock.conf");
+
+    // Construct path to the configuration file
+    let home_dir = env::var("HOME").unwrap_or_else(|_| String::from("/home/unknown"));
+    let config_file = format!("{}/.config/hypr/hyprclock.conf", home_dir);
+    let config_path = Path::new(&config_file);
+
+    // Prints the path for debugging
+    println!("Configuration file path: {}", config_path.display());
 
     // Applies style
     let provider = CssProvider::new();
-    provider.load_from_path(Path::new("hyprclock.conf"));
+    provider.load_from_path(&config_path);
     // TODO: add LOGGER for error, debug, info
 
     gtk::style_context_add_provider_for_display(
