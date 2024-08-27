@@ -34,7 +34,10 @@ pub fn build_ui(app: &Application, config: &Config) -> ApplicationWindow {
         .label(get_current_time())
         .build();
 
-    //let config_path = Path::new(".config/hypr/hyprclock.conf");
+    // Animation init
+    let (blur_enabled, fade_in_enabled) = config.animation.animation_default_settings();
+    println!("Blur enabled: {}", blur_enabled);
+    println!("Fade in enabled: {}", fade_in_enabled);
 
     // Construct path to the configuration file
     let home_dir = env::var("HOME").unwrap_or_else(|_| String::from("/home/unknown"));
