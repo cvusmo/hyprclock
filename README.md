@@ -1,5 +1,7 @@
 # Hyprclock
 
+![hyprclock_001](https://github.com/user-attachments/assets/a80249e7-860c-45ca-8d37-818f89fca74c)
+
 **Hyprclock** is a modern, highly customizable clock application designed for use with the Hyprland window manager on Linux. It offers real-time updates, animated effects, and easy theming options, making it a perfect fit for your Hyprland setup.
 
 ## Features
