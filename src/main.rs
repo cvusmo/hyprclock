@@ -1,8 +1,14 @@
+//src/main.rs
+//github.com/cvusmo/hyprclock
+
+mod gui;
+mod configuration;
+
 use gtk4 as gtk;
 use gtk::prelude::*;
 use gtk::{glib, Application};
 
-mod window;
+// use configuration;
 
 const APP_ID: &str = "org.cvusmo.Hyprclock";
 
@@ -13,6 +19,6 @@ fn main() -> glib::ExitCode {
 }
 
 fn run_main(app: &Application) {
-    let window = window::build_ui(app);
+    let window = gui::window::build_ui(app);
     window.present();
 }

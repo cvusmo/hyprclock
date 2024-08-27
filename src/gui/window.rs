@@ -1,3 +1,6 @@
+//src/gui/window
+//github.com/cvusmo/hyprclock
+
 use gio::Settings;
 use chrono::{DateTime, Local};
 use gtk4 as gtk;
@@ -14,7 +17,7 @@ pub fn build_ui(app: &Application) -> ApplicationWindow {
     let is_switch_enabled = settings.boolean("is-switch-enabled");
 
     let provider = CssProvider::new();
-    provider.load_from_path(Path::new("style.css")).unwrap();
+    provider.load_from_path(Path::new("style.css"));
 
     gtk::style_context_add_provider_for_display(
         &Display::default().unwrap(),
