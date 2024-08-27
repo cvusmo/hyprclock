@@ -8,8 +8,6 @@ use gtk4 as gtk;
 use gtk::prelude::*;
 use gtk::{glib, Application};
 
-// use configuration;
-
 const APP_ID: &str = "org.cvusmo.Hyprclock";
 
 fn main() -> glib::ExitCode {

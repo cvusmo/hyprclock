@@ -1,3 +1,5 @@
+/* default style.css */
+
 * {
   border: none;
   font-family: 'Hurmit Nerd Font';
@@ -5,3 +7,6 @@
   color: #59F87E;
   background-color: #0E0E20;
 }
+
+[Animation]
+
