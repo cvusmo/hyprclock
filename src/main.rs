@@ -17,6 +17,7 @@ fn main() -> glib::ExitCode {
 
     // Setup logging
     setup_logging().expect("Failed to setup logging");
+    log_test();
 
     // Create application 
     let app = Application::builder().application_id(APP_ID).build();
@@ -43,3 +44,11 @@ fn run_main(app: &Application, state: &Arc<Mutex<AppState>>) {
     window.present();
 }
 
+fn log_test() {
+    let state = create_state(); 
+
+    // Log test messages
+    log_info(&state, "INFO test message");
+    log_warn(&state, "WARN test message");
+    log_error(&state, "ERROR test message");
+}

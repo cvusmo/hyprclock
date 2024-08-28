@@ -26,7 +26,7 @@ pub fn setup_logging() -> Result<(), Box<dyn Error>> {
     let log_file = File::create("hyprclock-debug.log")?;
 
     Dispatch::new()
-        .format(|out, message, record| {
+       .format(|out, message, record| {
             out.finish(format_args!(
                 "[{}][{}] {}",
                 record.level(),
