@@ -10,12 +10,12 @@ use crate::Config;
 
 pub fn build_ui(app: &Application, config: &Config) -> ApplicationWindow {
     
-    // Load configuration styles
+    // Load configuration 
     let background_color = config.theme.background_color.as_str();
     let text_color = config.theme.text_color.as_str();
     let font_size = config.theme.font_size;
-   
-    let _css = format!(
+
+    let css = format!(
         "
         .clock {{
             color: {};
@@ -39,18 +39,17 @@ pub fn build_ui(app: &Application, config: &Config) -> ApplicationWindow {
     println!("Blur enabled: {}", blur_enabled);
     println!("Fade in enabled: {}", fade_in_enabled);
 
-    // Construct path to the configuration file
+    // Configuration dir path
     let home_dir = env::var("HOME").unwrap_or_else(|_| String::from("/home/unknown"));
     let config_file = format!("{}/.config/hypr/hyprclock.conf", home_dir);
     let config_path = Path::new(&config_file);
 
-    // Prints the path for debugging
     println!("Configuration file path: {}", config_path.display());
 
     // Applies style
     let provider = CssProvider::new();
-    provider.load_from_path(&config_path);
-    // TODO: add LOGGER for error, debug, info
+    //provider.load_from_path(config_path);
+    provider.load_from_data(&css);
 
     gtk::style_context_add_provider_for_display(
         &Display::default().unwrap(),
@@ -58,10 +57,12 @@ pub fn build_ui(app: &Application, config: &Config) -> ApplicationWindow {
         gtk::STYLE_PROVIDER_PRIORITY_APPLICATION,
     );
 
+    println!("Generated CSS:\n{}", css);
+
     // Dark/Light mode switch 
     let switch = Switch::builder().build();
 
-    // create 3x4 grid for window
+    // 3x4 grid for window
     let grid = Grid::builder()
         .row_spacing(10)
         .column_spacing(10)
