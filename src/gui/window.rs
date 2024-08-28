@@ -1,14 +1,13 @@
-//src/gui/window.rs
-//github.com/cvusmo/hyprclock
+// src/gui/window.rs
+// github.com/cvusmo/hyprclock
 
 use gtk4 as gtk;
 use glib::ControlFlow::Continue;
-use gtk::{prelude::*, Application, ApplicationWindow, 
-    Grid, Label, Switch, CssProvider, gdk::Display};
-use std::{env, path::Path};
-use crate::Config;
+use gtk::{prelude::*, Application, ApplicationWindow, Grid, Label, Switch, CssProvider, gdk::Display};
+use std::{env, path::Path, sync::Mutex, sync::Arc};
+use crate::{Config, configuration::logger::{log_debug, log_info, AppState}};
 
-pub fn build_ui(app: &Application, config: &Config) -> ApplicationWindow {
+pub fn build_ui(app: &Application, config: &Config, state: &Arc<Mutex<AppState>>) -> ApplicationWindow {
     
     // Load configuration 
     let background_color = config.theme.background_color.as_str();
@@ -36,19 +35,18 @@ pub fn build_ui(app: &Application, config: &Config) -> ApplicationWindow {
 
     // Animation init
     let (blur_enabled, fade_in_enabled) = config.animation.animation_default_settings();
-    println!("Blur enabled: {}", blur_enabled);
-    println!("Fade in enabled: {}", fade_in_enabled);
+    log_debug(state, &format!("Blur enabled: {}", blur_enabled));
+    log_debug(state, &format!("Fade in enabled: {}", fade_in_enabled));
 
     // Configuration dir path
-    let home_dir = env::var("HOME").unwrap_or_else(|_| String::from("/home/unknown"));
+    let home_dir = env::var("HOME").unwrap_or_else(|_| String::from("/home/echo"));
     let config_file = format!("{}/.config/hypr/hyprclock.conf", home_dir);
     let config_path = Path::new(&config_file);
 
-    println!("Configuration file path: {}", config_path.display());
+    log_info(state, &format!("Configuration file path: {}", config_path.display()));
 
     // Applies style
     let provider = CssProvider::new();
-    //provider.load_from_path(config_path);
     provider.load_from_data(&css);
 
     gtk::style_context_add_provider_for_display(
@@ -57,7 +55,7 @@ pub fn build_ui(app: &Application, config: &Config) -> ApplicationWindow {
         gtk::STYLE_PROVIDER_PRIORITY_APPLICATION,
     );
 
-    println!("Generated CSS:\n{}", css);
+    log_debug(state, &format!("Generated CSS:\n{}", css));
 
     // Dark/Light mode switch 
     let switch = Switch::builder().build();

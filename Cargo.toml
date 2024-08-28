@@ -11,3 +11,5 @@ config = "0.14.0"
 serde = { version = "1.0.209", features = ["derive"] }
 toml = "0.8.19"
 dirs = "5.0.1"
+fern = "0.6.2"
+log = "0.4.22"

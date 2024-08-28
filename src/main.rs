@@ -6,27 +6,40 @@ mod gui;
 
 use gtk4 as gtk;
 use gtk::{prelude::*, glib, Application};
-use crate::configuration::config::Config;
+use crate::configuration::{config::Config, logger::{log_info, log_warn, log_error, setup_logging, create_state, AppState}};
+use std::sync::{Arc, Mutex};
 
 const APP_ID: &str = "org.cvusmo.Hyprclock";
 
 fn main() -> glib::ExitCode {
+    
+    let _gtkinit = gtk::init();
+
+    // Setup logging
+    setup_logging().expect("Failed to setup logging");
+
+    // Create application 
     let app = Application::builder().application_id(APP_ID).build();
-    app.connect_activate(run_main);
+    let state = create_state();  
+
+    app.connect_activate(move |app| run_main(app, &state));
     app.run()
 }
 
-fn run_main(app: &Application) {
-    // Initialize config and update
+fn run_main(app: &Application, state: &Arc<Mutex<AppState>>) {
+    // Initialize config 
     let config = match Config::check_config() {
         Ok(config) => config,
         Err(e) => {
-            eprintln!("Failed to load config: {}", e);
+            log_error(state, &format!("Failed to load config: {}", e));
+            log_warn(state, &format!("WARN TEST: {}", e));
+            log_info(state, &format!("INFO TEST: {}", e));
             Config::new()
         }
     };
 
-    // Initialize window and build the UI
-    let window = gui::window::build_ui(app, &config);
+    // Initialize window
+    let window = gui::window::build_ui(app, &config, state);
     window.present();
 }
+
