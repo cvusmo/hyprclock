@@ -1,7 +1,7 @@
 // src/configuration/general.rs
 // github.com/cvusmo/hyprclock
 
-use serde::{Serialize, Deserialize};
+use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct GeneralConfig {

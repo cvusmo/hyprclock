@@ -1,15 +1,23 @@
 // src/gui/window.rs
 // github.com/cvusmo/hyprclock
 
-use gtk4 as gtk;
+use crate::{
+    configuration::logger::{log_debug, log_info, AppState},
+    Config,
+};
 use glib::ControlFlow::Continue;
-use gtk::{prelude::*, Application, ApplicationWindow, Grid, Label, Switch, CssProvider, gdk::Display};
-use std::{env, path::Path, sync::Mutex, sync::Arc};
-use crate::{Config, configuration::logger::{log_debug, log_info, AppState}};
+use gtk::{
+    gdk::Display, prelude::*, Application, ApplicationWindow, CssProvider, Grid, Label, Switch,
+};
+use gtk4 as gtk;
+use std::{env, path::Path, sync::Arc, sync::Mutex};
 
-pub fn build_ui(app: &Application, config: &Config, state: &Arc<Mutex<AppState>>) -> ApplicationWindow {
-    
-    // Load configuration 
+pub fn build_ui(
+    app: &Application,
+    config: &Config,
+    state: &Arc<Mutex<AppState>>,
+) -> ApplicationWindow {
+    // Load configuration
     let background_color = config.theme.background_color.as_str();
     let text_color = config.theme.text_color.as_str();
     let font_size = config.theme.font_size;
@@ -24,14 +32,10 @@ pub fn build_ui(app: &Application, config: &Config, state: &Arc<Mutex<AppState>>
             background-color: {};
         }}
         ",
-        text_color,
-        font_size,
-        background_color
-    );   
+        text_color, font_size, background_color
+    );
 
-    let clock_label = Label::builder()
-        .label(get_current_time())
-        .build();
+    let clock_label = Label::builder().label(get_current_time()).build();
 
     // Animation init
     let (blur_enabled, fade_in_enabled) = config.animation.animation_default_settings();
@@ -43,7 +47,10 @@ pub fn build_ui(app: &Application, config: &Config, state: &Arc<Mutex<AppState>>
     let config_file = format!("{}/.config/hypr/hyprclock.conf", home_dir);
     let config_path = Path::new(&config_file);
 
-    log_info(state, &format!("Configuration file path: {}", config_path.display()));
+    log_info(
+        state,
+        &format!("Configuration file path: {}", config_path.display()),
+    );
 
     // Applies style
     let provider = CssProvider::new();
@@ -57,14 +64,11 @@ pub fn build_ui(app: &Application, config: &Config, state: &Arc<Mutex<AppState>>
 
     log_debug(state, &format!("Generated CSS:\n{}", css));
 
-    // Dark/Light mode switch 
+    // Dark/Light mode switch
     let switch = Switch::builder().build();
 
     // 3x4 grid for window
-    let grid = Grid::builder()
-        .row_spacing(10)
-        .column_spacing(10)
-        .build();
+    let grid = Grid::builder().row_spacing(10).column_spacing(10).build();
 
     grid.attach(&switch, 0, 0, 1, 1);
     grid.attach(&clock_label, 1, 1, 2, 2);

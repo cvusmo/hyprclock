@@ -1,9 +1,9 @@
 // src/configuration/config.rs
 // github.com/cvusmo/hyprclock
 
-use std::{io, path::PathBuf, fs};
+use serde::{Deserialize, Serialize};
+use std::{fs, io, path::PathBuf};
 use toml;
-use serde::{Serialize, Deserialize};
 
 pub use crate::configuration::animation::AnimationConfig;
 pub use crate::configuration::env::EnvConfig;
@@ -58,7 +58,8 @@ impl Config {
         }
 
         // Write configuration
-        let config_contents = toml::ser::to_string(self).map_err(|e| io::Error::new(io::ErrorKind::InvalidData, e))?;
+        let config_contents = toml::ser::to_string(self)
+            .map_err(|e| io::Error::new(io::ErrorKind::InvalidData, e))?;
         fs::write(config_path, config_contents)
     }
 }
