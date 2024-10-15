@@ -3,11 +3,15 @@
 
 mod configuration;
 mod gui;
+mod debug;
 
 use crate::configuration::{
     config::Config,
-    logger::{create_state, log_error, log_info, log_warn, AppState, setup_logging},
+    logger::{create_state, log_error, log_info, log_warn, setup_logging, AppState},
 };
+
+use crate::debug::debug::enable_debug_mode;
+
 use clap::{Arg, Command};
 use gtk::{glib, prelude::*, Application};
 use gtk4 as gtk;
@@ -19,7 +23,8 @@ fn main() -> glib::ExitCode {
     let _gtkinit = gtk::init();
 
     let matches = Command::new("hyprclock")
-        .about("Hyprclock - A clock application with optional debug mode")
+        .version("0.1.0a")
+        .about("Hyprclock - A clock widget for time wizards")
         .arg(
             Arg::new("debug")
                 .short('d')
@@ -27,13 +32,31 @@ fn main() -> glib::ExitCode {
                 .help("Enables debug mode")
                 .action(clap::ArgAction::SetTrue),
         )
+        .arg(
+            Arg::new("config")
+                .short('c')
+                .long("config")
+                .help("Specifies a custom config file")
+                // .takes_values(true) 3.0 clap
+                .value_name("FILE")
+                .num_args(1), // accept one arg for config file
+        )
         .get_matches();
 
-    // Debug mode check
+    // --debug flag
     let debug_mode = *matches.get_one::<bool>("debug").unwrap_or(&false);
+    println!("Debug mode: {}", debug_mode);
 
-    if let Err(e) = setup_logging(debug_mode) {
-        eprintln!("Failed to set up logging: {}", e);
+    // --config flag
+    if let Some(config_file) = matches.get_one::<String>("config") {
+        println!("Using config file: {}", config_file);
+    }
+
+    if debug_mode {
+        enable_debug_mode();
+        if let Err(e) = setup_logging(debug_mode){
+            eprintln!("Failed to setup logging: {}", e);
+        }
     }
 
     let state = create_state();
@@ -46,7 +69,6 @@ fn main() -> glib::ExitCode {
 }
 
 fn run_main(app: &Application, state: &Arc<Mutex<AppState>>) {
-    
     // Initialize config
     let config = match Config::check_config() {
         Ok(config) => config,

@@ -43,7 +43,7 @@ pub fn build_ui(
     log_debug(state, &format!("Fade in enabled: {}", fade_in_enabled));
 
     // Configuration dir path
-    let home_dir = env::var("HOME").unwrap_or_else(|_| String::from("/home/echo"));
+    let home_dir = env::var("HOME").unwrap_or_else(|_| String::from("/home/$USER"));
     let config_file = format!("{}/.config/hypr/hyprclock.conf", home_dir);
     let config_path = Path::new(&config_file);
 
