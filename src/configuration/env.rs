@@ -14,4 +14,14 @@ impl EnvConfig {
             environment: String::from("development"), // Default value
         }
     }
+
+    pub fn validate(&self) -> Result<(), String> {
+        let valid_environments = vec!["development", "production"];
+        if valid_environments.contains(&self.environment.as_str()) {
+            Ok(())
+        } else {
+            Err(format!("Invalid environment: {}", self.environment))
+        }
+    }
 }
+

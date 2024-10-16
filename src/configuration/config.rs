@@ -19,10 +19,11 @@ pub struct Config {
 }
 
 impl Config {
+
     // Default configuration
     pub fn new() -> Self {
         Config {
-            animation: AnimationConfig::new(),
+            animation: AnimationConfig::new("default_animation"),
             env: EnvConfig::new(),
             general: GeneralConfig::new(),
             theme: ThemeConfig::new(),
@@ -45,6 +46,11 @@ impl Config {
         let loaded_config: Self = toml::de::from_str(&config_contents)
             .map_err(|e| io::Error::new(io::ErrorKind::InvalidData, e))?;
 
+        // Validate the loaded configuration
+        loaded_config.validate().map_err(|errors| {
+            io::Error::new(io::ErrorKind::InvalidData, format!("Config validation failed: {:?}", errors))
+        })?;
+
         Ok(loaded_config)
     }
 
@@ -61,6 +67,38 @@ impl Config {
         let config_contents = toml::ser::to_string(self)
             .map_err(|e| io::Error::new(io::ErrorKind::InvalidData, e))?;
         fs::write(config_path, config_contents)
+    }
+
+    // Validate configuration
+
+    pub fn validate(&self) -> Result<(), Vec<String>> {
+        let mut errors = Vec::new();
+
+        // Validate animation
+        if let Err(err) = self.animation.validate() {
+            errors.push(err);
+        }
+
+        // Validate env
+        if let Err(err) = self.env.validate() {
+            errors.push(err);
+        }
+
+        // Validate general
+        if let Err(err) = self.general.validate() {
+            errors.push(err);
+        }
+
+        // Validate theme 
+        if let Err(err) = self.theme.validate() {
+            errors.push(err);
+        }
+
+        if errors.is_empty() {
+            Ok(())
+        } else {
+            Err(errors)
+        }
     }
 }
 

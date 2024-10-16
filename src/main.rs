@@ -46,17 +46,19 @@ fn main() -> glib::ExitCode {
     // --debug flag
     let debug_mode = *matches.get_one::<bool>("debug").unwrap_or(&false);
     println!("Debug mode: {}", debug_mode);
+    
+    if debug_mode {
+        enable_debug_mode();
+    }
 
     // --config flag
     if let Some(config_file) = matches.get_one::<String>("config") {
         println!("Using config file: {}", config_file);
     }
 
-    if debug_mode {
-        enable_debug_mode();
-        if let Err(e) = setup_logging(debug_mode){
-            eprintln!("Failed to setup logging: {}", e);
-        }
+    // create log
+    if let Err(e) = setup_logging(debug_mode){
+        eprintln!("Failed to setup logging: {}", e);
     }
 
     let state = create_state();

@@ -7,3 +7,4 @@ pub mod env;
 pub mod general;
 pub mod logger;
 pub mod theme;
+pub mod validate;
