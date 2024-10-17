@@ -13,53 +13,58 @@ pub struct AppState {
 }
 
 // Normal mode
-pub fn normal_mode() -> Result<(), Box<dyn Error>> {
+pub fn normal_mode(state: &Arc<Mutex<AppState>>) -> Result<(), Box<dyn Error>> {
     if LOGGER_INITIALIZED.get().is_none() {
-        println!("Creating log file..."); // Debugging output
+        log_info(state, "Creating log file...");
         let log_file_result = File::create("hyprclock.log");
 
         match log_file_result {
             Ok(log_file) => {
+                // Simplified log format for normal mode
                 Dispatch::new()
                     .format(|out, message, record| {
+                        let module = record.target().split("::").last().unwrap_or("unknown");
+                        let line = record.line().map_or("unknown".to_string(), |l| l.to_string());
                         out.finish(format_args!(
-                            "[{}][{}] {}",
+                            "[{}] {}, {}:{}",
                             record.level(),
-                            record.target(),
-                            message
+                            message,
+                            module,
+                            line
                         ))
                     })
-                    .level(log::LevelFilter::Info) 
+                    .level(log::LevelFilter::Info)
                     .chain(std::io::stdout())
                     .chain(log_file)
                     .apply()?;
 
                 LOGGER_INITIALIZED.set(true).ok();
-                println!("Logger successfully created: hyprclock.log");
+                log_info(state, "Logger successfully created: hyprclock.log");
 
-                // Test log message
-                log::info!("Logger initialized in normal mode."); // This won't appear since level is Error
-                log::warn!("This is a warning message."); // This won't appear since level is Error
-                log::error!("This is an error message."); // This should appear in the log file
+                // Test log messages
+                log_info(state, "Logger initialized in normal mode.");
+                log_warn(state, "This is a warning message.");
+                log_error(state, "This is an error message.");
             }
             Err(e) => {
-                eprintln!("Failed to create log file: {}", e);
+                log_error(state, &format!("Failed to create log file: {}", e));
                 return Err(Box::new(e));
             }
         }
     } else {
-        println!("Logger is already initialized.");
+        log_info(state, "Logger is already initialized.");
     }
     Ok(())
 }
 
 // DEBUG MODE
-pub fn debug_mode() -> Result<(), Box<dyn Error>> {
+pub fn debug_mode(state: &Arc<Mutex<AppState>>) -> Result<(), Box<dyn Error>> {
     if LOGGER_INITIALIZED.get().is_none() {
         let log_file_result = File::create("hyprclock-debug.log");
 
         match log_file_result {
             Ok(log_file) => {
+                // Detailed log format for debug mode
                 Dispatch::new()
                     .format(|out, message, record| {
                         out.finish(format_args!(
@@ -75,28 +80,25 @@ pub fn debug_mode() -> Result<(), Box<dyn Error>> {
                     .apply()?;
                 LOGGER_INITIALIZED.set(true).ok();
 
-                // Print message indicating success
-                println!("Logger successfully created: hyprclock-debug.log");
+                log_info(state, "Logger successfully created: hyprclock-debug.log"); // Use log_info
             }
             Err(e) => {
-                eprintln!("Failed to create log file: {}", e);
+                log_error(state, &format!("Failed to create log file: {}", e)); // Use log_error
                 return Err(Box::new(e));
             }
         }
     } else {
-        // Print message indicating logger was already initialized
-        println!("Logger is already initialized.");
+        log_info(state, "Logger is already initialized."); // Use log_info
     }
     Ok(())
 }
 
-
 // Setup logging
-pub fn setup_logging(debug: bool) -> Result<(), Box<dyn Error>> {
+pub fn setup_logging(state: &Arc<Mutex<AppState>>, debug: bool) -> Result<(), Box<dyn Error>> {
     if debug {
-        debug_mode()
+        debug_mode(state)
     } else {
-        normal_mode()
+        normal_mode(state)
     }
 }
 
@@ -129,3 +131,4 @@ pub fn log_error(state: &Arc<Mutex<AppState>>, message: &str) {
     log::error!("{}", message);
     update_log_label(state, message);
 }
+

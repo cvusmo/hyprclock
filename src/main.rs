@@ -37,7 +37,6 @@ fn main() -> glib::ExitCode {
                 .short('c')
                 .long("config")
                 .help("Specifies a custom config file")
-                // .takes_values(true) 3.0 clap
                 .value_name("FILE")
                 .num_args(1), // accept one arg for config file
         )
@@ -57,11 +56,11 @@ fn main() -> glib::ExitCode {
     }
 
     // create log
-    if let Err(e) = setup_logging(debug_mode){
+    let state = create_state();
+
+    if let Err(e) = setup_logging(&state, debug_mode) {
         eprintln!("Failed to setup logging: {}", e);
     }
-
-    let state = create_state();
 
     // Create application
     let app = Application::builder().application_id(APP_ID).build();
