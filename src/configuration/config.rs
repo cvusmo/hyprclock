@@ -9,6 +9,7 @@ pub use crate::configuration::animation::AnimationConfig;
 pub use crate::configuration::env::EnvConfig;
 pub use crate::configuration::general::GeneralConfig;
 pub use crate::configuration::theme::ThemeConfig;
+use crate::configuration::validate::validate_animations;
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct Config {
@@ -19,11 +20,10 @@ pub struct Config {
 }
 
 impl Config {
-
     // Default configuration
     pub fn new() -> Self {
         Config {
-            animation: AnimationConfig::new("default_animation"),
+            animation: AnimationConfig::new(),
             env: EnvConfig::new(),
             general: GeneralConfig::new(),
             theme: ThemeConfig::new(),
@@ -31,8 +31,10 @@ impl Config {
     }
 
     // Load configuration
-    pub fn check_config() -> io::Result<Self> {
-        let config_path = get_config_path();
+    pub fn check_config(config_file: Option<String>) -> io::Result<Self> {
+        let config_path = config_file
+            .map(PathBuf::from)
+            .unwrap_or_else(get_config_path); // Fall back to default path
 
         if !config_path.exists() {
             // Return default configuration
@@ -70,12 +72,12 @@ impl Config {
     }
 
     // Validate configuration
-
     pub fn validate(&self) -> Result<(), Vec<String>> {
         let mut errors = Vec::new();
 
         // Validate animation
-        if let Err(err) = self.animation.validate() {
+        if let Err(err) = validate_animations(&[self.animation.clone()]) { 
+            // Pass the animation instance as a slice
             errors.push(err);
         }
 
@@ -108,3 +110,4 @@ pub fn get_config_path() -> PathBuf {
     path.push(".config/hypr/hyprclock.conf");
     path
 }
+

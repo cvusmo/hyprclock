@@ -5,29 +5,23 @@ use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct AnimationConfig {
-    pub name: String, 
-    pub blur_enabled: bool,
-    pub fade_in_enabled: bool,
+    pub blur: bool,  
+    pub fade_in: bool, 
 }
 
 impl AnimationConfig {
-    pub fn new(name: &str) -> Self {
+    pub fn new() -> Self {
+        Self::default()
+    }
+
+    pub fn default() -> Self {
         AnimationConfig {
-            name: name.to_string(),
-            blur_enabled: true,    // Default value
-            fade_in_enabled: true, // Default value
+            blur: true,  
+            fade_in: true, 
         }
     }
 
     pub fn animation_default_settings(&self) -> (bool, bool) {
-        (self.blur_enabled, self.fade_in_enabled)
-    }
-    pub fn validate(&self) -> Result<(), String> {
-        if self.blur_enabled && self.fade_in_enabled {
-            // Custom logic for conflicting or valid settings
-            Ok(())
-        } else {
-            Err("Invalid animation configuration.".to_string())
-        }
+        (self.blur, self.fade_in)
     }
 }

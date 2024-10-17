@@ -38,46 +38,46 @@ fn main() -> glib::ExitCode {
                 .long("config")
                 .help("Specifies a custom config file")
                 .value_name("FILE")
-                .num_args(1), // accept one arg for config file
+                .num_args(1),
         )
         .get_matches();
 
     // --debug flag
     let debug_mode = *matches.get_one::<bool>("debug").unwrap_or(&false);
-    println!("Debug mode: {}", debug_mode);
-    
     if debug_mode {
         enable_debug_mode();
     }
 
-    // --config flag
-    if let Some(config_file) = matches.get_one::<String>("config") {
-        println!("Using config file: {}", config_file);
+    // Handle config file
+    let config_file = matches.get_one::<String>("config").cloned(); 
+    if let Some(file) = &config_file {
+        println!("Using config file: {}", file);
     }
 
-    // create log
+    // Create log
     let state = create_state();
-
     if let Err(e) = setup_logging(&state, debug_mode) {
         eprintln!("Failed to setup logging: {}", e);
     }
 
     // Create application
     let app = Application::builder().application_id(APP_ID).build();
-
-    app.connect_activate(move |app| run_main(app, &state));
+    
+    // Pass the config_file to run_main
+    app.connect_activate(move |app| run_main(app, &state, config_file.clone()));
     app.run()
 }
 
-fn run_main(app: &Application, state: &Arc<Mutex<AppState>>) {
+fn run_main(app: &Application, state: &Arc<Mutex<AppState>>, config_file: Option<String>) {
     // Initialize config
-    let config = match Config::check_config() {
+    let config = match Config::check_config(config_file) { 
+        // Pass config_file to check_config
         Ok(config) => config,
         Err(e) => {
             log_error(state, &format!("Failed to load config: {}", e));
-            log_warn(state, &format!("WARN TEST: {}", e));
-            log_info(state, &format!("INFO TEST: {}", e));
-            Config::new()
+            log_warn(state, "Using default configuration due to error.");
+            log_info(state, &format!("Logging info check: {}", e));
+            Config::new() 
         }
     };
 
