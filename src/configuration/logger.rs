@@ -80,21 +80,22 @@ pub fn debug_mode(state: &Arc<Mutex<AppState>>) -> Result<(), Box<dyn Error>> {
                     .apply()?;
                 LOGGER_INITIALIZED.set(true).ok();
 
-                log_info(state, "Logger successfully created: hyprclock-debug.log"); // Use log_info
+                log_info(state, "Logger successfully created: hyprclock-debug.log"); 
             }
             Err(e) => {
-                log_error(state, &format!("Failed to create log file: {}", e)); // Use log_error
+                log_error(state, &format!("Failed to create log file: {}", e)); 
                 return Err(Box::new(e));
             }
         }
     } else {
-        log_info(state, "Logger is already initialized."); // Use log_info
+        log_info(state, "Logger is already initialized."); 
     }
     Ok(())
 }
 
 // Setup logging
 pub fn setup_logging(state: &Arc<Mutex<AppState>>, debug: bool) -> Result<(), Box<dyn Error>> {
+    log_info(state, "Setting up logging...");
     if debug {
         debug_mode(state)
     } else {

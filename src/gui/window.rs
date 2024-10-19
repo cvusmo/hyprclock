@@ -17,10 +17,16 @@ pub fn build_ui(
     config: &Config,
     state: &Arc<Mutex<AppState>>,
 ) -> ApplicationWindow {
+
     // Load configuration
     let background_color = config.theme.background_color.as_str();
-    let text_color = config.theme.text_color.as_str();
+    log_info(state, &format!("Background color: {}", background_color));
+
+    let font_color = config.theme.font_color.as_str();
+    log_info(state, &format!("Font color: {}", font_color));
+
     let font_size = config.theme.font_size;
+    log_info(state, &format!("Font size: {}", font_size));
 
     let css = format!(
         "
@@ -32,25 +38,24 @@ pub fn build_ui(
             background-color: {};
         }}
         ",
-        text_color, font_size, background_color
+        font_color, font_size, background_color
     );
 
-    let clock_label = Label::builder().label(get_current_time()).build();
+    let clock_label = Label::builder()
+        .label(get_current_time())
+        .css_classes(vec!["clock".to_string()]) // assign clock class
+        .build();
 
     // Animation init
-    let (blur_enabled, fade_in_enabled) = config.animation.animation_default_settings();
-    log_debug(state, &format!("Blur enabled: {}", blur_enabled));
-    log_debug(state, &format!("Fade in enabled: {}", fade_in_enabled));
+    let (blur, fade_in) = config.animation.animation_default_settings();
+    log_debug(state, &format!("Blur enabled: {}", blur));
+    log_debug(state, &format!("Fade in enabled: {}", fade_in));
 
     // Configuration dir path
     let home_dir = env::var("HOME").unwrap_or_else(|_| String::from("/home/$USER"));
     let config_file = format!("{}/.config/hypr/hyprclock.conf", home_dir);
     let config_path = Path::new(&config_file);
-
-    log_info(
-        state,
-        &format!("Configuration file path: {}", config_path.display()),
-    );
+    log_info(state, &format!("Configuration file path: {}", config_path.display()),);
 
     // Applies style
     let provider = CssProvider::new();
@@ -76,11 +81,20 @@ pub fn build_ui(
     let window = ApplicationWindow::builder()
         .application(app)
         .title("Hyprclock")
+        .css_classes(vec!["window".to_string()]) // assign window class
         .child(&grid)
+        //.child(&clock_label)
         .build();
 
+    // window default size
+    window.set_default_size(400,300);
+
+    // Timeout to update the clock label every second
     glib::timeout_add_seconds_local(1, move || {
-        clock_label.set_label(&get_current_time());
+        // Update clock (LABEL) time
+        let current_time = get_current_time();
+        clock_label.set_label(&current_time); // Corrected here
+        
         Continue
     });
 
