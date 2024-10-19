@@ -9,7 +9,7 @@ pub use crate::configuration::animation::AnimationConfig;
 pub use crate::configuration::env::EnvConfig;
 pub use crate::configuration::general::GeneralConfig;
 pub use crate::configuration::theme::ThemeConfig;
-use crate::configuration::validate::validate_animations;
+use crate::configuration::validate::{validate_animations, validate_theme};
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct Config {
@@ -92,7 +92,7 @@ impl Config {
         }
 
         // Validate theme 
-        if let Err(err) = self.theme.validate() {
+        if let Err(err) = validate_theme(&self.theme) {
             errors.push(err);
         }
 
@@ -110,4 +110,3 @@ pub fn get_config_path() -> PathBuf {
     path.push(".config/hypr/hyprclock.conf");
     path
 }
-
