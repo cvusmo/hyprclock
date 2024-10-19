@@ -2,13 +2,13 @@
 // github.com/cvusmo/hyprclock
 
 use std::collections::HashSet;
-use crate::configuration::animation::AnimationConfig;
+use crate::configuration::{animation::AnimationConfig, theme::ThemeConfig};
 
+// Validation function for animations
 pub fn validate_animations(animations: &[AnimationConfig]) -> Result<(), String> {
     let mut active_animations = HashSet::new();
 
     for animation in animations {
-        // Check for active animations (combining conditions)
         if animation.blur && !active_animations.insert("blur") {
             return Err("Error: 'blur' is set to true multiple times.".to_string());
         }
@@ -18,7 +18,7 @@ pub fn validate_animations(animations: &[AnimationConfig]) -> Result<(), String>
         }
     }
 
-    // Check for conflicting states: Each animation should not be both enabled and disabled
+    // Conflict checks for blur and fade_in
     let has_blur_enabled = animations.iter().any(|a| a.blur);
     let has_blur_disabled = animations.iter().any(|a| !a.blur);
     if has_blur_enabled && has_blur_disabled {
@@ -30,6 +30,24 @@ pub fn validate_animations(animations: &[AnimationConfig]) -> Result<(), String>
     if has_fade_in_enabled && has_fade_in_disabled {
         return Err("Error: 'fade_in' animation cannot be both true and false.".to_string());
     }
+
+    Ok(())
+}
+
+// Validation function for theme
+pub fn validate_theme(theme: &ThemeConfig) -> Result<(), String> {
+    // Call validate method from theme.rs
+    theme.validate()
+        .map_err(|e| format!("Theme validation failed: {}", e))
+}
+
+// General validation function
+pub fn validate_all(animations: &[AnimationConfig], theme: &ThemeConfig) -> Result<(), String> {
+    // Validate animations first
+    validate_animations(animations)?;
+
+    // Validate theme configuration
+    validate_theme(theme)?;
 
     Ok(())
 }

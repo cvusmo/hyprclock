@@ -17,8 +17,24 @@ pub fn build_ui(
     config: &Config,
     state: &Arc<Mutex<AppState>>,
 ) -> ApplicationWindow {
+   
+    // Loading config...
+    log_info(state, "Loading config...");
 
-    // Load configuration
+    // ENV
+    // END ENV
+    
+    // GENERAL
+    // END GENERAL
+
+    // ANIMATION
+    let (blur, fade_in) = config.animation.animation_default_settings();
+    log_debug(state, &format!("Blur enabled: {}", blur));
+    log_debug(state, &format!("Fade in enabled: {}", fade_in));
+    // END ANIMATION
+
+    // THEME
+    // Load configuration safely (handle potential errors)
     let background_color = config.theme.background_color.as_str();
     log_info(state, &format!("Background color: {}", background_color));
 
@@ -27,24 +43,6 @@ pub fn build_ui(
 
     let font_size = config.theme.font_size;
     log_info(state, &format!("Font size: {}", font_size));
-
-    let css = format!(
-        "
-        .clock {{
-            color: {};
-            font-size: {}px;
-        }}
-        .window {{
-            background-color: {};
-        }}
-        ",
-        font_color, font_size, background_color
-    );
-
-    let clock_label = Label::builder()
-        .label(get_current_time())
-        .css_classes(vec!["clock".to_string()]) // assign clock class
-        .build();
 
     // Animation init
     let (blur, fade_in) = config.animation.animation_default_settings();
@@ -57,7 +55,25 @@ pub fn build_ui(
     let config_path = Path::new(&config_file);
     log_info(state, &format!("Configuration file path: {}", config_path.display()),);
 
-    // Applies style
+    // Generate CSS from the configuration
+    let css = format!(
+        "
+        .clock {{
+            color: {};
+            font-size: {}px;
+            width: 100%;
+            height: 100%;
+            text-align: center;
+        }}
+        .window {{
+            background-color: {};
+        }}
+        ",
+        font_color, 
+        font_size, 
+        background_color
+    );
+
     let provider = CssProvider::new();
     provider.load_from_data(&css);
 
@@ -68,36 +84,48 @@ pub fn build_ui(
     );
 
     log_debug(state, &format!("Generated CSS:\n{}", css));
+    log_info(state, "Building window...");
 
-    // Dark/Light mode switch
-    let switch = Switch::builder().build();
-
-    // 3x4 grid for window
-    let grid = Grid::builder().row_spacing(10).column_spacing(10).build();
-
-    grid.attach(&switch, 0, 0, 1, 1);
-    grid.attach(&clock_label, 1, 1, 2, 2);
-
+    // Attempt to build the window
     let window = ApplicationWindow::builder()
         .application(app)
         .title("Hyprclock")
-        .css_classes(vec!["window".to_string()]) // assign window class
-        .child(&grid)
-        //.child(&clock_label)
+        .css_classes(vec!["window".to_string()])
         .build();
 
-    // window default size
-    window.set_default_size(400,300);
+    // TODO: add switch for dark/light mode later
+    //let switch = Switch::builder().build();
+   
+    let clock_label = Label::builder()
+        .label(get_current_time())
+        .css_classes(vec!["clock".to_string()])
+        .build();
 
-    // Timeout to update the clock label every second
+    let grid = Grid::builder()
+        .row_spacing(10)
+        .column_spacing(10)
+        .build();
+
+    //grid.attach(&switch, 0, 0, 1, 1);
+    grid.attach(&clock_label, 0, 1, 2, 1);
+
+    clock_label.set_hexpand(true);
+    clock_label.set_vexpand(true); 
+
+    grid.set_halign(gtk::Align::Center); 
+    grid.set_valign(gtk::Align::Center); 
+
+    window.set_child(Some(&grid));
+
+    // Time update (log any failures)
     glib::timeout_add_seconds_local(1, move || {
-        // Update clock (LABEL) time
         let current_time = get_current_time();
-        clock_label.set_label(&current_time); // Corrected here
+        clock_label.set_label(&current_time); 
         
         Continue
     });
 
+    log_info(state, "Window built successfully.");
     window
 }
 
