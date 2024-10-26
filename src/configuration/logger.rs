@@ -2,6 +2,7 @@ use fern::Dispatch;
 use gtk::Label;
 use gtk4 as gtk;
 use std::error::Error;
+use std::env;
 use std::fs::File;
 use std::sync::{Arc, Mutex};
 use once_cell::sync::OnceCell;
@@ -14,9 +15,13 @@ pub struct AppState {
 
 // Normal mode
 pub fn normal_mode(state: &Arc<Mutex<AppState>>) -> Result<(), Box<dyn Error>> {
-    if LOGGER_INITIALIZED.get().is_none() {
+  if LOGGER_INITIALIZED.get().is_none() {
         log_info(state, "Creating log file...");
-        let log_file_result = File::create("hyprclock.log");
+        
+        let user_dir = env::var("HOME").unwrap_or_else(|_| "/home/default".to_string());
+        let log_file_path = format!("{}/.config/hypr/hyprclock.log", user_dir);
+        let log_file_result = File::create(log_file_path);
+        //let log_file_result = File::create("/home/$USER/.config/hypr/hyprclock.log");
 
         match log_file_result {
             Ok(log_file) => {
