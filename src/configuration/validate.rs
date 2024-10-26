@@ -10,11 +10,15 @@ pub fn validate_animations(animations: &[AnimationConfig]) -> Result<(), String>
 
     for animation in animations {
         if animation.blur && !active_animations.insert("blur") {
-            return Err("Error: 'blur' is set to true multiple times.".to_string());
+            let error_message = "Error: 'blur' is set to true multiple times.".to_string();
+            // Log the error somewhere else if needed, or handle it directly
+            return Err(error_message);
         }
 
         if animation.fade_in && !active_animations.insert("fade_in") {
-            return Err("Error: 'fade_in' is set to true multiple times.".to_string());
+            let error_message = "Error: 'fade_in' is set to true multiple times.".to_string();
+            // Log the error somewhere else if needed, or handle it directly
+            return Err(error_message);
         }
     }
 
@@ -51,3 +55,4 @@ pub fn validate_all(animations: &[AnimationConfig], theme: &ThemeConfig) -> Resu
 
     Ok(())
 }
+

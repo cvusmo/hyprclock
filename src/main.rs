@@ -48,16 +48,16 @@ fn main() -> glib::ExitCode {
         enable_debug_mode();
     }
 
-    // Handle config file
-    let config_file = matches.get_one::<String>("config").cloned(); 
-    if let Some(file) = &config_file {
-        println!("Using config file: {}", file);
-    }
-
     // Create log
     let state = create_state();
     if let Err(e) = setup_logging(&state, debug_mode) {
-        eprintln!("Failed to setup logging: {}", e);
+        log_error(&state, &format!("Failed to setup logging: {}", e));
+    }
+
+    // Handle config file
+    let config_file = matches.get_one::<String>("config").cloned(); 
+    if let Some(file) = &config_file {
+        log_info(&state, &format!("Using config file: {}", file));
     }
 
     // Create application
