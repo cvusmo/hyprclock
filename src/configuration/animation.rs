@@ -1,19 +1,27 @@
 // src/configuration/animation.rs
+// github.com/cvusmo/hyprclock
 
+use serde::{Deserialize, Serialize};
+
+#[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct AnimationConfig {
-    pub blur_enabled: bool,
-    pub fade_in_enabled: bool,
+    pub blur: bool,  
+    pub fade_in: bool, 
 }
 
 impl AnimationConfig {
     pub fn new() -> Self {
+        Self::default()
+    }
+
+    pub fn default() -> Self {
         AnimationConfig {
-            blur_enabled: true,  // Default value
-            fade_in_enabled: true, // Default value
+            blur: true,  
+            fade_in: true, 
         }
     }
 
     pub fn animation_default_settings(&self) -> (bool, bool) {
-        (self.blur_enabled, self.fade_in_enabled)
+        (self.blur, self.fade_in)
     }
 }

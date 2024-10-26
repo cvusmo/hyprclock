@@ -1,31 +1,87 @@
-// src/gui/window
+// src/gui/window.rs
 // github.com/cvusmo/hyprclock
 
-use chrono::{DateTime, Local};
-use gio::Settings;
+use crate::{
+    configuration::logger::{log_debug, log_info, AppState},
+    Config,
+};
 use glib::ControlFlow::Continue;
+use gtk::{
+    gdk::Display, prelude::*, Application, ApplicationWindow, CssProvider, Grid, Label,
+};
 use gtk4 as gtk;
-use gtk::{prelude::*, gio, 
-        Application, ApplicationWindow, Grid, 
-        Label, Switch, CssProvider, gdk::Display};
-use std::path::Path;
+use std::{env, path::{Path, PathBuf}, sync::{Arc, Mutex}};
 
-use crate::configuration::animation::AnimationConfig;
+pub fn build_ui(
+    app: &Application,
+    config: &Config,
+    state: &Arc<Mutex<AppState>>,
+) -> ApplicationWindow {
+    log_info(state, "Loading config...");
+    
+    let (background_color, font_color, font_size) = load_theme(config, state);
+    let _config_path = load_configuration_path(state); // Prefix with _ to silence warning
+    let css = generate_css(&font_color, font_size, &background_color);
+    
+    apply_css(&css, state);
+    
+    log_info(state, "Building window...");
+    let window = create_window(app);
+    
+    let clock_label = Arc::new(create_clock_label()); // Wrap in Arc
+    let grid = create_grid(&clock_label);
+    
+    window.set_child(Some(&grid));
 
-const APP_ID: &str = "org.cvusmo.Hyprclock";
+    // Start the timer for updating the clock label
+    start_clock_update(clock_label.clone()); // Pass the cloned Arc
 
-pub fn build_ui(app: &Application) -> ApplicationWindow {
+    log_info(state, "Window built successfully.");
+    window
+}
 
-    let settings = Settings::new(APP_ID);
+fn load_theme(config: &Config, state: &Arc<Mutex<AppState>>) -> (String, String, f32) {
+    let background_color = config.theme.background_color.clone();
+    log_info(state, &format!("Background color: {}", background_color));
 
-    // BEGIN CONFIGURATION
-    let animation_config = AnimationConfig::new();
-    let (blur_enabled, fade_in_enabled) = animation_config.animation_default_settings();
+    let font_color = config.theme.font_color.clone();
+    log_info(state, &format!("Font color: {}", font_color));
 
-    // LOAD STYLE.css
+    let font_size = config.theme.font_size as f32; // Ensure font_size is a float
+    log_info(state, &format!("Font size: {}", font_size));
+
+    (background_color, font_color, font_size)
+}
+
+fn load_configuration_path(state: &Arc<Mutex<AppState>>) -> PathBuf {
+    let home_dir = env::var("HOME").unwrap_or_else(|_| String::from("/home/$USER"));
+    let config_file = format!("{}/.config/hypr/hyprclock.conf", home_dir);
+    let config_path = Path::new(&config_file);
+    log_info(state, &format!("Configuration file path: {}", config_path.display()));
+    config_path.to_path_buf() // Return PathBuf for further usage
+}
+
+fn generate_css(font_color: &str, font_size: f32, background_color: &str) -> String {
+    format!(
+        "
+        .clock {{
+            color: {};
+            font-size: {}px;
+            width: 100%;
+            height: 100%;
+            text-align: center;
+        }}
+        .window {{
+            background-color: {};
+        }}
+        ",
+        font_color, font_size, background_color
+    )
+}
+
+fn apply_css(css: &str, state: &Arc<Mutex<AppState>>) {
     let provider = CssProvider::new();
-    provider.load_from_path(Path::new("style.css"));
-    // TODO: add LOGGER for error, debug, info
+    provider.load_from_data(css);
 
     gtk::style_context_add_provider_for_display(
         &Display::default().unwrap(),
@@ -33,70 +89,53 @@ pub fn build_ui(app: &Application) -> ApplicationWindow {
         gtk::STYLE_PROVIDER_PRIORITY_APPLICATION,
     );
 
-    let gtk_settings = gtk::Settings::default().unwrap();
-    // END OF CONFIGURATION
+    // Use the passed-in state instead of trying to create a new AppState
+    log_debug(state, &format!("Generated CSS:\n{}", css));
+}
 
-    // SWITCH DARK MODE TO LIGHT MODE
-    let is_switch_enabled = settings.boolean("is-switch-enabled");
+fn create_window(app: &Application) -> ApplicationWindow {
+    ApplicationWindow::builder()
+        .application(app)
+        .title("Hyprclock")
+        .css_classes(vec!["window".to_string()])
+        .build()
+}
 
-    let switch = Switch::builder()
-        .state(is_switch_enabled)
-        .build();
-
-    switch.connect_state_set(move |_, is_enabled| {
-        settings
-            .set_boolean("is-switch-enabled", is_enabled)
-            .expect("Could not set setting.");
-
-        let new_theme = if is_enabled {
-            eprintln!("DARK MODE");
-            Some("Materia-dark") 
-        } else {
-            eprintln!("LIGHT MODE");
-            Some("Materia")
-        };
-
-        gtk_settings.set_gtk_theme_name(new_theme);
-
-        eprintln!("Blur enabled: {}", blur_enabled);
-        eprintln!("Fade-in enabled: {}", fade_in_enabled);
-        
-        glib::Propagation::Proceed
-    });
-
-    // PLACEHOLDER FOR HYPRCLOCK
-    let clock_label = Label::builder()
+fn create_clock_label() -> Label {
+    Label::builder()
         .label(get_current_time())
-        .build();
+        .css_classes(vec!["clock".to_string()])
+        .build()
+}
 
-    // APPLY DEFAULT CONFIG 
-
-    // create 3x4 grid for window
+fn create_grid(clock_label: &Arc<Label>) -> Grid {
     let grid = Grid::builder()
         .row_spacing(10)
         .column_spacing(10)
         .build();
 
-    grid.attach(&switch, 0, 0, 1, 1);
-    grid.attach(&clock_label, 1, 1, 2, 2);
+    grid.attach(&**clock_label, 0, 1, 2, 1); // Dereference Arc to get the Label
+    
+    clock_label.set_hexpand(true);
+    clock_label.set_vexpand(true); 
 
-    // builds window 
-    let window = ApplicationWindow::builder()
-        .application(app)
-        .title("Hyprclock")
-        .child(&grid)
-        .build();
+    grid.set_halign(gtk::Align::Center); 
+    grid.set_valign(gtk::Align::Center); 
 
-    let _update = std::time::Duration::from_secs(1);
+    grid
+}
+
+fn start_clock_update(clock_label: Arc<Label>) {
     glib::timeout_add_seconds_local(1, move || {
-        clock_label.set_label(&get_current_time());
+        let current_time = get_current_time();
+        clock_label.set_label(&current_time);
         Continue
     });
-
-    window    
 }
 
 fn get_current_time() -> String {
+    use chrono::{DateTime, Local};
+
     let now: DateTime<Local> = Local::now();
     now.format("%H:%M:%S").to_string()
 }
