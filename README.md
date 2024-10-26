@@ -1,6 +1,6 @@
-![Hyprclock Banner](https://github.com/user-attachments/assets/a80249e7-860c-45ca-8d37-818f89fca74c)
-
 # Hyprclock
+
+![hyprclock_001](https://github.com/user-attachments/assets/a80249e7-860c-45ca-8d37-818f89fca74c)
 
 **Hyprclock** is a modern, highly customizable clock application designed for use with the Hyprland window manager on Linux. It offers real-time updates, animated effects, and easy theming options, making it a perfect fit for your Hyprland setup.
 
@@ -19,7 +19,16 @@
 
 To install **Hyprclock**, follow these steps:
 
-1. **WAIT FOR RELEASE**
+1. Download the hyprclock-0.1.0a.tar.gz file from the Releases section of the hyprclock repository.
+2. Open a terminal
+3. cd ~/path/to/where/you/saved/the/file
+4. tar -xzf hyprclock-0.1.0a.tar.gz
+5. cd hyprclock
+6. chmod +x hyprclock
+7. ./hyprclock
+8. Move to a directory such as /usr/local/bin
+    sudo mv hyprclock /usr/local/bin/   
+    after moving it you can simply use hyprclock to launch the application from a terminal
 
 ## Configuration
 
@@ -28,15 +37,20 @@ Example for hyprclock.conf:
 ```
 # ~/.config/hypr/hyprclock.conf
 
-[General]
+[animation]
+blur = true
+fade_in = true
+
+[env]
+environment = "development"
+
+[general]
 clock_format = "24-hour"
 
-[Theme]
-theme = "Materia-dark"
-
-[Animation]
-blur_enabled = true
-fade_in_enabled = true
+[theme]
+background_color = "#000000"
+font_color = "#59F87E"
+font_size = 200
 ```
 
 ## Usage
