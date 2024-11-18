@@ -1,7 +1,7 @@
 [Desktop Entry]
 Name=Hyprclock
 Comment=Display a real-time clock
-Exec=/home/echo/projects/hyprclock/target/release/hyprclock
+Exec=/home/echo/projects/remote/hyprclock/target/release/hyprclock
 Icon=icon
 Terminal=false
 Type=Application
