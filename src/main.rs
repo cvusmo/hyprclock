@@ -77,6 +77,7 @@ fn main() -> glib::ExitCode {
         match enable_debug_mode(&state) {
             Ok(true) => {
                 debug_mode = true;
+                return true;
             }
             Err(err) => {
                 eprintln!("Failed to enable debug mode: {}", err);

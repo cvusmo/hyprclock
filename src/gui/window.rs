@@ -51,6 +51,10 @@ pub fn build_ui(
     start_clock_update(clock_label.clone());
 
     // Resize window
+    let base_font_size = font_size;
+    window.size_allocate(window, &rectangle, base_font_size) {
+    dynamic_font(&window, &clock_label, base_font_size);
+    }
 
     log_info(state, "Window built successfully.");
     window
@@ -70,6 +74,7 @@ fn create_window(app: &Application) -> ApplicationWindow {
 fn create_clock_label() -> Label {
     Label::builder()
         .label(get_current_time())
+        .max_width_chars(-1)
         .css_classes(vec!["clock".to_string()])
         .build()
 }
@@ -183,4 +188,32 @@ fn apply_css(css: &str, state: &Arc<Mutex<AppState>>) {
 
     // Use the passed-in state instead of trying to create a new AppState
     log_debug(state, &format!("Generated CSS:\n{}", css));
+}
+
+// Function to update font size dynamically
+fn dynamic_font(window: &ApplicationWindow, label: &Label, base_size: f32) {
+    let allocation = window.allocation();
+    let width = allocation.width() as f32;
+    let height = allocation.height() as f32;
+
+    // Calculate dynamic size based off window
+    let new_font_size = base_size.min(width / 15.0).min(height / 15.0);
+
+    // Apply updated font size via CSS
+    let css = format! (
+        "
+        .clock {{
+            font-size: {}px;
+            text-align: center;
+        }}
+        ",
+        new_font_size
+    );
+    let provider = CssProvider::new();
+    provider.load_from_data(css.as_bytes());
+    gtk::style_context_add_provider_for_display(
+        &Display::default().unwrap(),
+        &provider,
+        gtk::STYLE_PROVIDER_PRIORITY_APPLICATION,
+    );
 }
