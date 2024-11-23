@@ -22,24 +22,28 @@ pub fn build_ui(
 ) -> ApplicationWindow {
     log_info(state, "Loading config...");
 
+    // Load theme and aply CSS
     let (background_color, font_color, font_size) = load_theme(config, state);
-    let _config_path = load_configuration_path(state); // Prefix with _ to silence warning
+    let _config_path = load_configuration_path(state); // TODO: incorporate config_path
     let css = generate_css(&font_color, font_size, &background_color);
-
     apply_css(&css, state);
 
+    // Create window
     log_info(state, "Building window...");
     let window = create_window(app);
 
-    let clock_label = Arc::new(create_clock_label()); // Wrap in Arc
-    let grid = create_grid(&clock_label);
+    // Create clock
+    let clock_label = Arc::new(create_clock_label());
 
-    // If debug_mode is enabled
-    if debug_mode {
-        let debug_label = Label::new(Some("Debug Mode Active"));
-        debug_label.set_css_classes(&["debug-label"]);
-        grid.attach(&debug_label, 0, 0, 2, 1);
-    }
+    // Debug Mode enabled
+    let debug_label = if debug_mode {
+        Some(Arc::new(create_debug_label()))
+    } else {
+        None
+    };
+
+    // Create grid
+    let grid = create_grid(&clock_label, debug_label.as_ref());
 
     window.set_child(Some(&grid));
 
@@ -70,11 +74,26 @@ fn create_clock_label() -> Label {
         .build()
 }
 
+fn create_debug_label() -> Label {
+    Label::builder()
+        .label("Debug")
+        .css_classes(vec!["debug-label".to_string()])
+        .build()
+}
+
 // Function to create grid
-fn create_grid(clock_label: &Arc<Label>) -> Grid {
+fn create_grid(clock_label: &Arc<Label>, debug_label: Option<&Arc<Label>>) -> Grid {
     let grid = Grid::builder().row_spacing(10).column_spacing(10).build();
 
+    // Attach clock
     grid.attach(&**clock_label, 0, 1, 2, 1); // Dereference Arc to get the Label
+
+    // Attach debug label
+    if let Some(label) = debug_label {
+        grid.attach(&**label, 0, 0, 2, 1);
+        label.set_hexpand(true);
+        label.set_vexpand(true);
+    }
 
     clock_label.set_hexpand(true);
     clock_label.set_vexpand(true);
