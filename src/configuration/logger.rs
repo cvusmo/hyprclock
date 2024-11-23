@@ -1,14 +1,11 @@
-// src/configuration/logger.rs
-// github.com/cvusmo/hyprclock
+// src/logger.rs
 
 use fern::Dispatch;
 use gtk::Label;
 use gtk4 as gtk;
-use std::error::Error;
-use std::env;
-use std::fs::File;
-use std::sync::{Arc, Mutex};
 use once_cell::sync::OnceCell;
+use std::sync::{Arc, Mutex};
+use std::{env, error::Error, fs::File};
 
 static LOGGER_INITIALIZED: OnceCell<bool> = OnceCell::new();
 
@@ -16,14 +13,25 @@ pub struct AppState {
     pub log_label: Label,
 }
 
-// Init logger
-fn initialize_logger(state: &Arc<Mutex<AppState>>, log_file_path: &str, log_level: log::LevelFilter) -> Result<(), Box<dyn Error>> {
+// General initialization function for both normal and debug modes
+fn initialize_logger(
+    state: &Arc<Mutex<AppState>>,
+    log_file_path: &str,
+    log_level: log::LevelFilter,
+) -> Result<(), Box<dyn Error>> {
+    if LOGGER_INITIALIZED.get().is_some() {
+        log_info(state, "Logger is already initialized.");
+        return Ok(());
+    }
+
     let log_file_result = File::create(log_file_path)?;
 
     Dispatch::new()
         .format(|out, message, record| {
             let module = record.target().split("::").last().unwrap_or("unknown");
-            let line = record.line().map_or("unknown".to_string(), |l| l.to_string());
+            let line = record
+                .line()
+                .map_or("unknown".to_string(), |l| l.to_string());
             out.finish(format_args!(
                 "[{}] {}, {}:{}",
                 record.level(),
@@ -37,58 +45,41 @@ fn initialize_logger(state: &Arc<Mutex<AppState>>, log_file_path: &str, log_leve
         .chain(log_file_result)
         .apply()?;
 
-    log_info(state, &format!("Logger successfully created: {}", log_file_path));
-    Ok(())
-}
-
-// Normal mode
-pub fn normal_mode(state: &Arc<Mutex<AppState>>) -> Result<(), Box<dyn Error>> {
-    if LOGGER_INITIALIZED.get().is_none() {
-        log_info(state, "Creating log file...");
-
-        let user_dir = env::var("HOME").unwrap_or_else(|_| "/home/default".to_string());
-        let log_file_path = format!("{}/.config/hypr/hyprclock.log", user_dir);
-
-        initialize_logger(state, &log_file_path, log::LevelFilter::Info)?;
-
-        log_info(state, "Logger initialized in normal mode.");
-        log_warn(state, "This is a warning message.");
-        log_error(state, "This is an error message.");
-    } else {
-        log_info(state, "Logger is already initialized.");
-    }
-    Ok(())
-}
-
-// DEBUG MODE
-pub fn debug_mode(state: &Arc<Mutex<AppState>>) -> Result<(), Box<dyn Error>> {
-    if LOGGER_INITIALIZED.get().is_none() {
-        let user_dir = env::var("HOME").unwrap_or_else(|_| "/home/default".to_string());
-        let log_file_path = format!("{}/.config/hypr/hyprclock-debug.log", user_dir);
-
-        initialize_logger(state, &log_file_path, log::LevelFilter::Debug)?;
-    } else {
-        log_info(state, "Logger is already initialized.");
-    }
+    LOGGER_INITIALIZED.set(true).unwrap();
+    log_info(
+        state,
+        &format!("Logger successfully created: {}", log_file_path),
+    );
     Ok(())
 }
 
 // Setup logging
 pub fn setup_logging(state: &Arc<Mutex<AppState>>, debug: bool) -> Result<(), Box<dyn Error>> {
     log_info(state, "Setting up logging...");
-    if debug {
-        debug_mode(state)
+
+    let user_dir = env::var("HOME").unwrap_or_else(|_| "/home/default".to_string());
+    let log_file_path = if debug {
+        format!("{}/.config/hypr/hyprclock-debug.log", user_dir)
     } else {
-        normal_mode(state)
-    }
+        format!("{}/.config/hypr/hyprclock.log", user_dir)
+    };
+
+    let log_level = if debug {
+        log::LevelFilter::Debug
+    } else {
+        log::LevelFilter::Info
+    };
+
+    initialize_logger(state, &log_file_path, log_level)
 }
 
-// Create states
+// Create state
 pub fn create_state() -> Arc<Mutex<AppState>> {
     let log_label = Label::new(None);
     Arc::new(Mutex::new(AppState { log_label }))
 }
 
+// Utility functions for logging
 pub fn update_log_label(state: &Arc<Mutex<AppState>>, message: &str) {
     let state = state.lock().unwrap();
     state.log_label.set_label(message);

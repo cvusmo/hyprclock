@@ -2,86 +2,108 @@
 // github.com/cvusmo/hyprclock
 
 mod configuration;
-mod gui;
 mod debug;
+mod gui;
 
 use crate::configuration::{
     config::Config,
-    logger::{create_state, log_error, log_info, log_warn, setup_logging, AppState},
+    logger::{create_state, log_error, log_info, setup_logging},
 };
-
 use crate::debug::debug::enable_debug_mode;
+use crate::gui::window::build_ui;
 
-use clap::{Arg, Command};
+use clap::Parser;
 use gtk::{glib, prelude::*, Application};
 use gtk4 as gtk;
-use std::sync::{Arc, Mutex};
+use std::sync::Arc;
 
 const APP_ID: &str = "org.cvusmo.Hyprclock";
 
+// Hyprclock - a clock widget for Time Wizards
+#[derive(Parser, Debug)]
+#[command(
+    version = "0.1.1-100-p",
+    about = "Hyprclock - a clock widget for Time Wizards"
+)]
+struct Args {
+    // Setup modes
+    #[arg(short, long)]
+    debug: bool,
+    #[arg(short, long)]
+    normal: bool,
+    #[arg(short, long, value_name = "FILE")]
+    config: Option<String>,
+}
+
 fn main() -> glib::ExitCode {
-    let _gtkinit = gtk::init();
-
-    let matches = Command::new("hyprclock")
-        .version("0.1.0a")
-        .about("Hyprclock - A clock widget for time wizards")
-        .arg(
-            Arg::new("debug")
-                .short('d')
-                .long("debug")
-                .help("Enables debug mode")
-                .action(clap::ArgAction::SetTrue),
-        )
-        .arg(
-            Arg::new("config")
-                .short('c')
-                .long("config")
-                .help("Specifies a custom config file")
-                .value_name("FILE")
-                .num_args(1),
-        )
-        .get_matches();
-
-    // --debug flag
-    let debug_mode = *matches.get_one::<bool>("debug").unwrap_or(&false);
-    if debug_mode {
-        enable_debug_mode();
+    // Initialize gtk
+    if let Err(err) = gtk4::init() {
+        eprintln!("Failed to initialize GTK: {}", err);
+        return glib::ExitCode::FAILURE;
     }
 
-    // Create log
+    // Create state
     let state = create_state();
+
+    // Parse command line arguments
+    let args = Args::parse();
+
+    // Determine modes
+    let debug_mode = args.debug;
+    let normal_mode = args.normal;
+    let config_file = args.config;
+
+    // Setup logging based on mode
     if let Err(e) = setup_logging(&state, debug_mode) {
         log_error(&state, &format!("Failed to setup logging: {}", e));
+        return glib::ExitCode::FAILURE;
     }
 
     // Handle config file
-    let config_file = matches.get_one::<String>("config").cloned(); 
-    if let Some(file) = &config_file {
+    if let Some(ref file) = config_file {
         log_info(&state, &format!("Using config file: {}", file));
+    }
+
+    // Enable debug mode if required
+    if debug_mode {
+        if let Err(err) = enable_debug_mode(&state) {
+            log_error(&state, &format!("Failed to enable debug mode: {}", err));
+            return glib::ExitCode::FAILURE;
+        }
     }
 
     // Create application
     let app = Application::builder().application_id(APP_ID).build();
-    
-    // Pass the config_file to run_main
-    app.connect_activate(move |app| run_main(app, &state, config_file.clone()));
+
+    // Clone necessary variables
+    let state_clone = Arc::clone(&state);
+    let config_file_clone = config_file.clone();
+
+    // Connect activate and initialize the UI
+    app.connect_activate(move |app| {
+        // Initialize config
+        let config = match Config::check_config(config_file_clone.clone()) {
+            Ok(config) => config,
+            Err(err) => {
+                log_error(&state_clone, &format!("Failed to load config: {}", err));
+                Config::new()
+            }
+        };
+
+        // Initialize window with debug_mode awareness
+        let window = build_ui(app, &config, &state_clone, args.debug);
+        window.present();
+    });
+
+    // Run the application in debug or normal mode
+    if debug_mode {
+        log_info(&state, "Running in debug mode...");
+    } else if normal_mode {
+        log_info(&state, "Running in normal mode...");
+    } else {
+        log_info(&state, "Running in default mode...");
+    }
+
+    // Run the application
     app.run()
-}
-
-fn run_main(app: &Application, state: &Arc<Mutex<AppState>>, config_file: Option<String>) {
-    // Initialize config
-    let config = match Config::check_config(config_file) { 
-        // Pass config_file to check_config
-        Ok(config) => config,
-        Err(e) => {
-            log_error(state, &format!("Failed to load config: {}", e));
-            log_warn(state, "Using default configuration due to error.");
-            log_info(state, &format!("Logging info check: {}", e));
-            Config::new() 
-        }
-    };
-
-    // Initialize window
-    let window = gui::window::build_ui(app, &config, state);
-    window.present();
 }

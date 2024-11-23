@@ -34,7 +34,7 @@ impl Config {
     pub fn check_config(config_file: Option<String>) -> io::Result<Self> {
         let config_path = config_file
             .map(PathBuf::from)
-            .unwrap_or_else(get_config_path); // Fall back to default path
+            .unwrap_or_else(get_config_path);
 
         if !config_path.exists() {
             // Return default configuration
@@ -50,7 +50,10 @@ impl Config {
 
         // Validate the loaded configuration
         loaded_config.validate().map_err(|errors| {
-            io::Error::new(io::ErrorKind::InvalidData, format!("Config validation failed: {:?}", errors))
+            io::Error::new(
+                io::ErrorKind::InvalidData,
+                format!("Config validation failed: {:?}", errors),
+            )
         })?;
 
         Ok(loaded_config)
@@ -76,7 +79,7 @@ impl Config {
         let mut errors = Vec::new();
 
         // Validate animation
-        if let Err(err) = validate_animations(&[self.animation.clone()]) { 
+        if let Err(err) = validate_animations(&[self.animation.clone()]) {
             // Pass the animation instance as a slice
             errors.push(err);
         }
@@ -91,7 +94,7 @@ impl Config {
             errors.push(err);
         }
 
-        // Validate theme 
+        // Validate theme
         if let Err(err) = validate_theme(&self.theme) {
             errors.push(err);
         }

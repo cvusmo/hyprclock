@@ -18,6 +18,7 @@ pub fn build_ui(
     app: &Application,
     config: &Config,
     state: &Arc<Mutex<AppState>>,
+    debug_mode: bool,
 ) -> ApplicationWindow {
     log_info(state, "Loading config...");
 
@@ -32,6 +33,13 @@ pub fn build_ui(
 
     let clock_label = Arc::new(create_clock_label()); // Wrap in Arc
     let grid = create_grid(&clock_label);
+
+    // If debug_mode is enabled
+    if debug_mode {
+        let debug_label = Label::new(Some("Debug Mode Active"));
+        debug_label.set_css_classes(&["debug-label"]);
+        grid.attach(&debug_label, 0, 0, 2, 1);
+    }
 
     window.set_child(Some(&grid));
 
@@ -133,6 +141,10 @@ fn generate_css(font_color: &str, font_size: f32, background_color: &str) -> Str
         }}
         .window {{
             background-color: {};
+        }}
+        .debug-label {{
+            color: red;
+            font-weight: bold;
         }}
         ",
         font_color, font_size, background_color
