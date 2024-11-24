@@ -53,7 +53,7 @@ fn main() -> glib::ExitCode {
     println!("Parsed Arguments: {:?}", args);
 
     // Determine modes
-    let mut debug_mode = args.debug;
+    let debug_mode = args.debug; // let mut debug_mode
     let normal_mode = args.normal;
     let config_file = args.config;
 
@@ -76,8 +76,8 @@ fn main() -> glib::ExitCode {
         // Enable debug mode
         match enable_debug_mode(&state) {
             Ok(true) => {
-                debug_mode = true;
-                return true;
+                // debug_mode = true;
+                log_info(&state, "Debug flag set to true");
             }
             Err(err) => {
                 eprintln!("Failed to enable debug mode: {}", err);
