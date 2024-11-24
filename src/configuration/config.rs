@@ -20,7 +20,7 @@ pub struct Config {
 }
 
 impl Config {
-    // Default configuration
+    /// Create a new configuration with default values
     pub fn new() -> Self {
         Config {
             animation: AnimationConfig::new(),
@@ -30,25 +30,24 @@ impl Config {
         }
     }
 
-    // Load configuration
+    /// Build or load the configuration from file
     pub fn check_config(config_file: Option<String>) -> io::Result<Self> {
         let config_path = config_file
             .map(PathBuf::from)
             .unwrap_or_else(get_config_path);
 
         if !config_path.exists() {
-            // Return default configuration
+            // Create and save the default configuration
             let default_config = Config::new();
-            default_config.update()?;
+            default_config.save()?;
             return Ok(default_config);
         }
 
-        // Read & parse configuration
-        let config_contents = fs::read_to_string(config_path)?;
-        let loaded_config: Self = toml::de::from_str(&config_contents)
+        // Load and validate the configuration
+        let config_contents = fs::read_to_string(&config_path)?;
+        let loaded_config: Self = toml::from_str(&config_contents)
             .map_err(|e| io::Error::new(io::ErrorKind::InvalidData, e))?;
 
-        // Validate the loaded configuration
         loaded_config.validate().map_err(|errors| {
             io::Error::new(
                 io::ErrorKind::InvalidData,
@@ -59,42 +58,33 @@ impl Config {
         Ok(loaded_config)
     }
 
-    // Save configuration
-    pub fn update(&self) -> io::Result<()> {
+    /// Save the configuration to file
+    pub fn save(&self) -> io::Result<()> {
         let config_path = get_config_path();
 
-        // Create configuration dir
         if let Some(parent) = config_path.parent() {
             fs::create_dir_all(parent)?;
         }
 
-        // Write configuration
-        let config_contents = toml::ser::to_string(self)
-            .map_err(|e| io::Error::new(io::ErrorKind::InvalidData, e))?;
+        let config_contents =
+            toml::to_string(self).map_err(|e| io::Error::new(io::ErrorKind::InvalidData, e))?;
         fs::write(config_path, config_contents)
     }
 
-    // Validate configuration
+    /// Validate all submodule configurations
     pub fn validate(&self) -> Result<(), Vec<String>> {
         let mut errors = Vec::new();
 
-        // Validate animation
+        // Validate each submodule configuration
         if let Err(err) = validate_animations(&[self.animation.clone()]) {
-            // Pass the animation instance as a slice
             errors.push(err);
         }
-
-        // Validate env
         if let Err(err) = self.env.validate() {
             errors.push(err);
         }
-
-        // Validate general
         if let Err(err) = self.general.validate() {
             errors.push(err);
         }
-
-        // Validate theme
         if let Err(err) = validate_theme(&self.theme) {
             errors.push(err);
         }
@@ -107,7 +97,7 @@ impl Config {
     }
 }
 
-// Get configuration path
+/// Get the path to the configuration file
 pub fn get_config_path() -> PathBuf {
     let mut path = dirs::home_dir().unwrap_or_else(|| PathBuf::from("/"));
     path.push(".config/hypr/hyprclock.conf");

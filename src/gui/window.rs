@@ -1,11 +1,9 @@
 // src/gui/window.rs
 // github.com/cvusmo/hyprclock
 
+use crate::configuration::config::Config;
 use crate::configuration::general::GeneralConfig;
-use crate::{
-    configuration::logger::{log_debug, log_info, AppState},
-    Config,
-};
+use crate::configuration::logger::{log_debug, log_info, AppState};
 use glib::ControlFlow::Continue;
 use gtk::{
     gdk::Display, pango::WrapMode, prelude::*, Application, ApplicationWindow, CssProvider, Grid,
@@ -18,6 +16,7 @@ use std::{
     sync::{Arc, Mutex},
 };
 
+// Function to Build UI
 pub fn build_ui(
     app: &Application,
     config: &Config,
@@ -35,7 +34,7 @@ pub fn build_ui(
     let _config_path = load_configuration_path(state); // TODO: incorporate config_path
 
     // Load theme and apply CSS
-    let (background_color, font_color, _font_size) = load_theme(config, state);
+    let (background_color, font_color, _font_size) = config.theme.load_theme(&state);
     let css = generate_css(
         &font_color,
         &background_color,
@@ -45,7 +44,7 @@ pub fn build_ui(
     apply_css(&css, state);
 
     // Create clock
-    let clock_label = Arc::new(create_clock_label(&config.general)); // TODO: Fix warning
+    let clock_label = create_clock_label(&config.general);
 
     // Set initial clock label size
     clock_label.set_width_request(initial_width);
@@ -53,7 +52,7 @@ pub fn build_ui(
 
     // Debug Mode enabled
     let debug_label = if debug_mode {
-        Some(Arc::new(create_debug_label()))
+        Some(create_debug_label())
     } else {
         None
     };
@@ -132,15 +131,17 @@ fn create_window(
 }
 
 // Function for clock label
-fn create_clock_label(config: &GeneralConfig) -> Label {
-    Label::builder()
-        .label(&get_current_time(config))
-        .justify(Justification::Fill)
-        .wrap(true)
-        .wrap_mode(WrapMode::WordChar)
-        .max_width_chars(-1)
-        .css_classes(vec!["clock".to_string()])
-        .build()
+fn create_clock_label(config: &GeneralConfig) -> Arc<Label> {
+    Arc::new(
+        Label::builder()
+            .label(&get_current_time(config))
+            .justify(Justification::Fill)
+            .wrap(true)
+            .wrap_mode(WrapMode::WordChar)
+            .max_width_chars(-1)
+            .css_classes(vec!["clock".to_string()])
+            .build(),
+    )
 }
 
 // Function to Start Clock Update
@@ -171,11 +172,13 @@ fn get_current_time(config: &GeneralConfig) -> String {
 }
 
 // Function to create debug label
-fn create_debug_label() -> Label {
-    Label::builder()
-        .label("Debug")
-        .css_classes(vec!["debug-label".to_string()])
-        .build()
+fn create_debug_label() -> Arc<Label> {
+    Arc::new(
+        Label::builder()
+            .label("Debug")
+            .css_classes(vec!["debug-label".to_string()])
+            .build(),
+    )
 }
 
 // Function to create grid
@@ -183,11 +186,11 @@ fn create_grid(clock_label: &Arc<Label>, debug_label: Option<&Arc<Label>>) -> Gr
     let grid = Grid::builder().row_spacing(10).column_spacing(10).build();
 
     // Attach clock
-    grid.attach(&**clock_label, 0, 1, 2, 1); // Dereference Arc to get the Label
+    grid.attach(clock_label.as_ref(), 0, 1, 2, 1); // Use `as_ref` to dereference Arc
 
-    // Attach debug label
+    // Attach debug label if it exists
     if let Some(label) = debug_label {
-        grid.attach(&**label, 0, 0, 2, 1);
+        grid.attach(label.as_ref(), 0, 0, 2, 1); // Use `as_ref` to dereference Arc
         label.set_hexpand(true);
         label.set_vexpand(true);
     }
@@ -199,20 +202,6 @@ fn create_grid(clock_label: &Arc<Label>, debug_label: Option<&Arc<Label>>) -> Gr
     grid.set_valign(gtk::Align::Center);
 
     grid
-}
-
-// Function to load theme
-fn load_theme(config: &Config, state: &Arc<Mutex<AppState>>) -> (String, String, f32) {
-    let background_color = config.theme.background_color.clone();
-    log_info(state, &format!("Background color: {}", background_color));
-
-    let font_color = config.theme.font_color.clone();
-    log_info(state, &format!("Font color: {}", font_color));
-
-    let font_size = config.theme.font_size as f32; // Ensure font_size is a float
-    log_info(state, &format!("Font size: {}", font_size));
-
-    (background_color, font_color, font_size)
 }
 
 // Function to load config path

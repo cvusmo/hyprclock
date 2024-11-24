@@ -1,7 +1,11 @@
 // src/configuration/general.rs
 // github.com/cvusmo/hyprclock
 
+use chrono::{DateTime, Local};
+use glib::ControlFlow::Continue;
+use gtk4::Label;
 use serde::{Deserialize, Serialize};
+use std::sync::Arc;
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct GeneralConfig {
@@ -36,6 +40,25 @@ impl GeneralConfig {
             Ok(())
         } else {
             Err(errors.join("; "))
+        }
+    }
+    pub fn start_clock_update(clock_label: Arc<Label>, general_config: GeneralConfig) {
+        glib::timeout_add_seconds_local(1, move || {
+            let current_time = general_config.get_current_time();
+            clock_label.set_label(&current_time);
+            Continue
+        });
+    }
+
+    pub fn get_current_time(&self) -> String {
+        let now: DateTime<Local> = Local::now();
+
+        match (self.clock_format.as_str(), self.time_precision.as_str()) {
+            ("24-hour", "short") => now.format("%H:%M").to_string(),
+            ("24-hour", "long") => now.format("%H:%M:%S").to_string(),
+            ("12-hour", "short") => now.format("%I:%M %p").to_string(),
+            ("12-hour", "long") => now.format("%I:%M:%S %p").to_string(),
+            _ => now.format("%H:%M:%S").to_string(),
         }
     }
 }

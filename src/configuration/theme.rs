@@ -1,7 +1,9 @@
 // src/configuration/theme.rs
 // github.com/cvusmo/hyprclock
 
+use crate::configuration::logger::{log_info, AppState};
 use serde::{Deserialize, Serialize};
+use std::sync::{Arc, Mutex};
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct ThemeConfig {
@@ -12,21 +14,13 @@ pub struct ThemeConfig {
 
 impl ThemeConfig {
     pub fn new() -> Self {
-        Self::default() 
+        Self::default()
     }
 }
 
-impl Default for ThemeConfig {
-    fn default() -> Self {
-        ThemeConfig {
-            background_color: "#000000".to_string(),  // Default background
-            font_color: "#59F87E".to_string(),  // Default font color
-            font_size: 24,  // Default font size
-        }
-    }
-}
-
+// ThemeConfig
 impl ThemeConfig {
+    // Function to validate
     pub fn validate(&self) -> Result<(), String> {
         // Validate background color format
         if !self.background_color.starts_with('#') || self.background_color.len() != 7 {
@@ -46,12 +40,29 @@ impl ThemeConfig {
         Ok(())
     }
 
-    // Theme default settings if needed
-    pub fn theme_default_settings(&self) -> (String, String, u32) {
+    // Function to Load Theme
+    pub fn load_theme(&self, state: &Arc<Mutex<AppState>>) -> (String, String, f32) {
+        log_info(
+            state,
+            &format!("Background color: {}", self.background_color),
+        );
+        log_info(state, &format!("Font color: {}", self.font_color));
+        log_info(state, &format!("Font size: {}", self.font_size));
         (
             self.background_color.clone(),
             self.font_color.clone(),
-            self.font_size,
+            self.font_size as f32,
         )
+    }
+}
+
+// Default ThemeConfig
+impl Default for ThemeConfig {
+    fn default() -> Self {
+        ThemeConfig {
+            background_color: "#1C1B1A".to_string(),
+            font_color: "#F4E3C1".to_string(),
+            font_size: 100,
+        }
     }
 }

@@ -146,3 +146,4 @@ fn create_and_run_app(
     log_info(state, "Running the application...");
     app.run();
 }
+
