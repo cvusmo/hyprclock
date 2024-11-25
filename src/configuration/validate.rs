@@ -1,8 +1,10 @@
 // src/configuration/validate.rs
 // github.com/cvusmo/hyprclock
 
+use crate::configuration::{
+    animation::AnimationConfig, env::EnvConfig, general::GeneralConfig, theme::ThemeConfig,
+};
 use std::collections::HashSet;
-use crate::configuration::{animation::AnimationConfig, theme::ThemeConfig};
 
 // Validation function for animations
 pub fn validate_animations(animations: &[AnimationConfig]) -> Result<(), String> {
@@ -10,15 +12,11 @@ pub fn validate_animations(animations: &[AnimationConfig]) -> Result<(), String>
 
     for animation in animations {
         if animation.blur && !active_animations.insert("blur") {
-            let error_message = "Error: 'blur' is set to true multiple times.".to_string();
-            // Log the error somewhere else if needed, or handle it directly
-            return Err(error_message);
+            return Err("Error: 'blur' is set to true multiple times.".to_string());
         }
 
         if animation.fade_in && !active_animations.insert("fade_in") {
-            let error_message = "Error: 'fade_in' is set to true multiple times.".to_string();
-            // Log the error somewhere else if needed, or handle it directly
-            return Err(error_message);
+            return Err("Error: 'fade_in' is set to true multiple times.".to_string());
         }
     }
 
@@ -40,19 +38,20 @@ pub fn validate_animations(animations: &[AnimationConfig]) -> Result<(), String>
 
 // Validation function for theme
 pub fn validate_theme(theme: &ThemeConfig) -> Result<(), String> {
-    // Call validate method from theme.rs
-    theme.validate()
+    theme
+        .validate()
         .map_err(|e| format!("Theme validation failed: {}", e))
 }
 
-// General validation function
-pub fn validate_all(animations: &[AnimationConfig], theme: &ThemeConfig) -> Result<(), String> {
-    // Validate animations first
-    validate_animations(animations)?;
-
-    // Validate theme configuration
-    validate_theme(theme)?;
-
-    Ok(())
+// Validation function for general configuration
+pub fn validate_general(general: &GeneralConfig) -> Result<(), String> {
+    general
+        .validate()
+        .map_err(|e| format!("General configuration validation failed: {}", e))
 }
 
+// Validation function for environment configuration
+pub fn validate_environment(env: &EnvConfig) -> Result<(), String> {
+    env.validate()
+        .map_err(|e| format!("Environment configuration validation failed: {}", e))
+}

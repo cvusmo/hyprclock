@@ -95,6 +95,7 @@ pub fn log_debug(state: &Arc<Mutex<AppState>>, message: &str) {
     update_log_label(state, message);
 }
 
+#[allow(dead_code)]
 pub fn log_warn(state: &Arc<Mutex<AppState>>, message: &str) {
     log::warn!("{}", message);
     update_log_label(state, message);
