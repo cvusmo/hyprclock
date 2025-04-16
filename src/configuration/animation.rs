@@ -5,8 +5,8 @@ use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct AnimationConfig {
-    pub blur: bool,  
-    pub fade_in: bool, 
+    pub blur: bool,
+    pub fade_in: bool,
 }
 
 impl AnimationConfig {
@@ -16,8 +16,8 @@ impl AnimationConfig {
 
     pub fn default() -> Self {
         AnimationConfig {
-            blur: true,  
-            fade_in: true, 
+            blur: true,
+            fade_in: true,
         }
     }
 
@@ -25,3 +25,4 @@ impl AnimationConfig {
         (self.blur, self.fade_in)
     }
 }
+
