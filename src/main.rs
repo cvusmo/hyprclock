@@ -9,6 +9,7 @@ use hyprclock::debug::debug::enable_debug_mode;
 use hyprclock::gui::calendar::CalendarModule;
 use hyprclock::gui::clock::ClockModule;
 use hyprclock::gui::window::build_ui;
+use serde_json::json;
 use std::sync::{Arc, Mutex};
 
 const APP_ID: &str = "org.cvusmo.Hyprclock";
@@ -21,12 +22,12 @@ fn main() -> glib::ExitCode {
     if args.waybar {
         let config = Config::load_config(args.config).unwrap_or_else(|_| Config::new());
         let clock_module = ClockModule::new(&config, &state);
-        println!(
-            r#"{{"text": "{}", "tooltip": "{}"}}"#,
-            clock_module.get_time(&config),
-            // Call the static function, passing the clock_module reference.
-            CalendarModule::generate_tooltip(&clock_module)
-        );
+        // Build JSON using serde_json to properly escape any control characters.
+        let output = json!({
+            "text": clock_module.get_time(&config),
+            "tooltip": CalendarModule::generate_tooltip(&clock_module)
+        });
+        println!("{}", output.to_string());
         return glib::ExitCode::SUCCESS;
     }
 
@@ -61,7 +62,7 @@ fn main() -> glib::ExitCode {
 }
 
 fn create_and_run_app(
-    state: &Arc<Mutex<AppState>>, // Updated type path
+    state: &Arc<Mutex<AppState>>,
     config: Config,
     debug_mode: bool,
 ) -> glib::ExitCode {
