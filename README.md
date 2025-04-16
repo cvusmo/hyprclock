@@ -1,19 +1,21 @@
 # Hyprclock
 
-![hyprclock_001](https://github.com/user-attachments/assets/a80249e7-860c-45ca-8d37-818f89fca74c)
+![Hyprclock Showcase](https://github.com/cvusmo/hyprclock/blob/dev/assets/showcase_001.png?raw=true
 
 **Hyprclock** is a modern, highly customizable clock application designed for use with the Hyprland window manager on Linux. It offers real-time updates, animated effects, and easy theming options, making it a perfect fit for your Hyprland setup.
 
 ## Features
 
 - [x] **Real-time Clock**: Displays the current time and updates every second.
-- [ ] **Customizable Themes**: Supports different themes that can be applied through a simple configuration file or the application’s settings.
+- [x] **Customizable Themes**: Supports different themes that can be applied through a simple configuration file or the application’s settings.
 - [ ] **Animations**: Includes support for basic animations like blur and fade-in effects.
 - [ ] **Easy Configuration**: Configure appearance and behavior through a user-friendly configuration file.
+- [ ] **Thunderbird Integration**: Integrating with Thunderbird to manage emails and scheduling.
+- [ ] **Waybar/eww Integration**: Integrating with waybar/eww bars for dynamic clock that's simple but powerful.
 
 ## Status
 
-**Hyprclock** is currently in active development. The application is nearing its release, but I'm still adding features and refining its functionality. Stay tuned for updates! This is my first rust built widget as I'm new to the rust language. I'm not a professional software engineer, or programmer. I'm simply a nerd who enjoys learning.
+**Hyprclock** is currently in active development. This is a community project for [cvusmo](https://www.twitch.tv/cvusmo) and the wormhole community. If you'd like to be a part of this project or more, join the [wormhole](https://discord.gg/WZH4XNgpem). Stay tuned for updates! 
 
 ## Installation
 
